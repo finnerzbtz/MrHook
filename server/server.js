@@ -752,6 +752,15 @@ async function startServer() {
       } catch (error) {
         console.log('ℹ️ order_placed column check:', error.message);
       }
+
+      try {
+        await db.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2)
+        `);
+        console.log('✅ Ensured total_price column exists');
+      } catch (error) {
+        console.log('ℹ️ total_price column check:', error.message);
+      }
     }
     
     app.listen(PORT, '0.0.0.0', () => {
