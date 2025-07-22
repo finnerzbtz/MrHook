@@ -1,10 +1,9 @@
-
 // Address lookup utility for UK addresses using comprehensive address API
 class AddressLookup {
   // Using the free UK address API - comprehensive address data
   static apiUrl = 'https://api.postcodes.io';
   static addressApiUrl = 'https://api.getaddress.io/find';
-  
+
   // Find addresses for a given postcode
   static async findAddress() {
     const postcodeInput = document.getElementById('postcode');
@@ -31,7 +30,7 @@ class AddressLookup {
     try {
       // Try multiple address APIs for comprehensive coverage
       let addresses = await this.getAddressesFromAPI(postcode);
-      
+
       if (addresses && addresses.length > 0) {
         this.displayAddressOptions(addresses, postcode);
         this.prefillPostcodeInfo(postcode);
@@ -90,16 +89,16 @@ class AddressLookup {
     ];
 
     const addresses = [];
-    
+
     // Generate 5-8 sample addresses
     const numAddresses = Math.floor(Math.random() * 4) + 5;
-    
+
     for (let i = 0; i < numAddresses; i++) {
       const street = streetNames[Math.floor(Math.random() * streetNames.length)];
       const houseType = houseTypes[Math.floor(Math.random() * houseTypes.length)];
-      
+
       let addressLine1 = '';
-      
+
       if (houseType.type === 'number') {
         const houseNum = Math.floor(Math.random() * (houseType.range[1] - houseType.range[0])) + houseType.range[0];
         addressLine1 = `${houseNum} ${street}`;
@@ -183,7 +182,7 @@ class AddressLookup {
 
     if (this._currentAddresses && this._currentAddresses[selectedIndex]) {
       const address = this._currentAddresses[selectedIndex];
-      
+
       // Fill in the address fields
       const addressLine1 = document.getElementById('addressLine1');
       const addressLine2 = document.getElementById('addressLine2');
@@ -269,6 +268,25 @@ class AddressLookup {
     }
     this._currentAddresses = null;
     this.clearAddressFields();
+  }
+
+  // Lookup postcode
+  static async lookupPostcode() {
+    const postcodeInput = document.getElementById('postcode');
+    const lookupBtn = document.getElementById('postcodeBtn');
+
+    if (!postcodeInput || !lookupBtn) return;
+
+    const postcode = postcodeInput.value.trim();
+
+    if (!postcode) {
+      Toast.show('Please enter a postcode', 'error');
+      return;
+    }
+
+    // Show loading state
+    lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
+    lookupBtn.disabled = true;
   }
 }
 

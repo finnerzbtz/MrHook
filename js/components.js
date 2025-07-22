@@ -221,7 +221,8 @@ const AuthComponent = {
       // Store user data locally for Auth.getCurrentUser()
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       
-      Toast.show(`Welcome back, ${response.user.firstName}!`);
+      const userName = response.user.firstName || response.user.first_name || 'User';
+      Toast.show(`Welcome back, ${userName}!`);
       App.updateAuthUI();
       App.showPage('home');
     } catch (error) {
@@ -354,7 +355,7 @@ const ProfileComponent = {
   isEditing: false,
 
   // Render profile information
-  render() {
+  async render() {
     const user = Auth.getCurrentUser();
     if (!user) {
       App.showPage('login');
@@ -364,33 +365,71 @@ const ProfileComponent = {
     const profileInfo = document.getElementById('profileInfo');
     const ordersList = document.getElementById('ordersList');
 
-    if (this.isEditing) {
-      this.renderEditForm(profileInfo, user);
-    } else {
-      this.renderViewMode(profileInfo, user);
-    }
+    // Fetch fresh user data from API to ensure we have complete profile
+    try {
+      const freshUserData = await API.getProfile();
+      // Update local storage with complete user data
+      localStorage.setItem('currentUser', JSON.stringify(freshUserData.user));
+      
+      const completeUser = freshUserData.user;
 
-    this.renderOrders(ordersList, user);
+      if (this.isEditing) {
+        this.renderEditForm(profileInfo, completeUser);
+      } else {
+        this.renderViewMode(profileInfo, completeUser);
+      }
+
+      this.renderOrders(ordersList, completeUser);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Fallback to stored user data
+      if (this.isEditing) {
+        this.renderEditForm(profileInfo, user);
+      } else {
+        this.renderViewMode(profileInfo, user);
+      }
+
+      this.renderOrders(ordersList, user);
+    }
   },
 
   // Render view mode
   renderViewMode(container, user) {
+    const firstName = user.firstName || user.first_name || 'Not provided';
+    const lastName = user.lastName || user.last_name || 'Not provided';
+    const email = user.email || 'Not provided';
+    const phone = user.phone || 'Not provided';
+    
+    // Handle address - could be object or string
+    let addressDisplay = 'Not provided';
+    if (user.address) {
+      if (typeof user.address === 'object') {
+        addressDisplay = `${user.address.address_line_1 || ''} ${user.address.address_line_2 || ''}, ${user.address.city || ''}, ${user.address.postcode || ''}`.trim();
+      } else {
+        addressDisplay = user.address;
+      }
+    }
+
     container.innerHTML = `
       <div class="profile-info-item">
         <label>First Name:</label>
-        <span>${escapeHtml(user.firstName)}</span>
+        <span>${escapeHtml(firstName)}</span>
       </div>
       <div class="profile-info-item">
         <label>Last Name:</label>
-        <span>${escapeHtml(user.lastName)}</span>
+        <span>${escapeHtml(lastName)}</span>
       </div>
       <div class="profile-info-item">
         <label>Email:</label>
-        <span>${escapeHtml(user.email)}</span>
+        <span>${escapeHtml(email)}</span>
+      </div>
+      <div class="profile-info-item">
+        <label>Phone:</label>
+        <span>${escapeHtml(phone)}</span>
       </div>
       <div class="profile-info-item">
         <label>Address:</label>
-        <span>${escapeHtml(user.address)}</span>
+        <span>${escapeHtml(addressDisplay)}</span>
       </div>
       <div class="profile-actions">
         <button class="btn btn-primary" onclick="ProfileComponent.startEditing()">
@@ -407,26 +446,45 @@ const ProfileComponent = {
 
   // Render edit form
   renderEditForm(container, user) {
+    const firstName = user.firstName || user.first_name || '';
+    const lastName = user.lastName || user.last_name || '';
+    const email = user.email || '';
+    const phone = user.phone || '';
+    
+    // Handle address - could be object or string
+    let addressValue = '';
+    if (user.address) {
+      if (typeof user.address === 'object') {
+        addressValue = `${user.address.address_line_1 || ''}\n${user.address.address_line_2 || ''}\n${user.address.city || ''}\n${user.address.postcode || ''}`;
+      } else {
+        addressValue = user.address;
+      }
+    }
+
     container.innerHTML = `
       <form id="profileEditForm" class="profile-edit-form">
         <div class="form-row">
           <div class="form-group">
             <label for="editFirstName">First Name</label>
-            <input type="text" id="editFirstName" value="${escapeHtml(user.firstName)}" required class="form-input">
+            <input type="text" id="editFirstName" value="${escapeHtml(firstName)}" required class="form-input">
           </div>
           <div class="form-group">
             <label for="editLastName">Last Name</label>
-            <input type="text" id="editLastName" value="${escapeHtml(user.lastName)}" required class="form-input">
+            <input type="text" id="editLastName" value="${escapeHtml(lastName)}" required class="form-input">
           </div>
         </div>
         <div class="form-group">
           <label for="editEmail">Email</label>
-          <input type="email" id="editEmail" value="${escapeHtml(user.email)}" required class="form-input">
+          <input type="email" id="editEmail" value="${escapeHtml(email)}" required class="form-input">
           <small class="form-note">Changing email will require verification</small>
         </div>
         <div class="form-group">
+          <label for="editPhone">Phone</label>
+          <input type="tel" id="editPhone" value="${escapeHtml(phone)}" class="form-input">
+        </div>
+        <div class="form-group">
           <label for="editAddress">Address</label>
-          <textarea id="editAddress" required class="form-input" rows="3">${escapeHtml(user.address)}</textarea>
+          <textarea id="editAddress" required class="form-input" rows="3">${escapeHtml(addressValue)}</textarea>
         </div>
         <div class="profile-actions">
           <button type="submit" class="btn btn-primary">
