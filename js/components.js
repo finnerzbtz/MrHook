@@ -577,7 +577,7 @@ const AuthComponent = {
   },
 
   // Handle password reset
-  handlePasswordReset(event) {
+  async handlePasswordReset(event) {
     event.preventDefault();
 
     const email = document.getElementById('resetEmail')?.value.trim();
@@ -592,9 +592,117 @@ const AuthComponent = {
       return;
     }
 
-    // For demo purposes, just show success message
-    Toast.show('Password reset link sent to your email!');
-    AuthComponent.closePasswordReset();
+    try {
+      // Show loading state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      }
+
+      // Call password reset API
+      const response = await API.forgotPassword(email);
+      
+      Toast.show('Password reset link sent to your email!');
+      AuthComponent.closePasswordReset();
+
+      // For demo purposes, show the reset link in console
+      if (response.resetLink) {
+        console.log('🔗 Demo Reset Link:', response.resetLink);
+        Toast.show(`Demo: Check console for reset link`, 'info');
+      }
+    } catch (error) {
+      console.error('Password reset error:', error);
+      Toast.show(error.message || 'Failed to send reset email. Please try again.', 'error');
+    } finally {
+      // Reset button state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Reset Link';
+      }
+    }
+  }
+};
+
+// Reset Password Component
+const ResetPasswordComponent = {
+  currentToken: null,
+
+  // Initialize reset password page
+  init() {
+    // Check URL for reset token
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) {
+      this.currentToken = token;
+      App.showPage('resetPassword');
+    }
+
+    // Add form listener
+    const form = document.getElementById('resetPasswordForm');
+    if (form) {
+      form.addEventListener('submit', this.handleResetPassword.bind(this));
+    }
+  },
+
+  // Handle reset password form submission
+  async handleResetPassword(event) {
+    event.preventDefault();
+
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+    // Validation
+    if (!newPassword || !confirmPassword) {
+      Toast.show('Please fill in all fields', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Toast.show('Passwords do not match', 'error');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Toast.show('Password must be at least 6 characters long', 'error');
+      return;
+    }
+
+    if (!this.currentToken) {
+      Toast.show('Invalid reset token', 'error');
+      return;
+    }
+
+    try {
+      // Show loading state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resetting...';
+      }
+
+      // Call reset password API
+      await API.resetPassword(this.currentToken, newPassword);
+      
+      Toast.show('Password reset successfully! Please login with your new password.');
+      
+      // Clear URL parameters and redirect to login
+      window.history.replaceState({}, document.title, window.location.pathname);
+      App.showPage('login');
+      
+    } catch (error) {
+      console.error('Reset password error:', error);
+      Toast.show(error.message || 'Failed to reset password. Please try again.', 'error');
+    } finally {
+      // Reset button state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-key"></i> Reset Password';
+      }
+    }
   }
 };
 
@@ -1207,6 +1315,7 @@ window.ProductsComponent = {
 };
 
 window.AuthComponent = AuthComponent;
+window.ResetPasswordComponent = ResetPasswordComponent;
 window.ProfileComponent = ProfileComponent;
 window.BasketComponent = BasketComponent;
 window.VideoHoverComponent = VideoHoverComponent;

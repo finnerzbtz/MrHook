@@ -235,6 +235,47 @@
             </div>
         </section>
 
+        <!-- Reset Password Page -->
+        <section class="page reset-password-page" id="resetPasswordPage">
+            <div class="container">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h2>Reset Your Password</h2>
+                        <p>Enter your new password below</p>
+                    </div>
+
+                    <form id="resetPasswordForm" class="auth-form active">
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="newPassword" required class="form-input password-input" minlength="6">
+                                <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
+                                    <i class="fas fa-eye" id="newPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirm New Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="confirmNewPassword" required class="form-input password-input" minlength="6">
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmNewPassword')">
+                                    <i class="fas fa-eye" id="confirmNewPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary auth-btn">
+                            <i class="fas fa-key"></i>
+                            Reset Password
+                        </button>
+                        <a href="#" class="back-to-login" onclick="App.showPage('login')">
+                            <i class="fas fa-arrow-left"></i>
+                            Back to Login
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </section>
+
         <!-- Product Detail Page -->
         <section class="page product-detail-page" id="productDetailPage">
             <div class="product-detail-header">
@@ -448,6 +489,37 @@
             <i class="fas fa-check-circle"></i>
             <span class="toast-message"></span>
         </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div class="modal" id="passwordResetModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reset Password</h2>
+                <button class="modal-close" onclick="AuthComponent.closePasswordReset()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="passwordResetForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email Address</label>
+                        <input type="email" id="resetEmail" required class="form-input" placeholder="Enter your email">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Send Reset Link
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="AuthComponent.closePasswordReset()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="modal-overlay" onclick="AuthComponent.closePasswordReset()"></div>
     </div>
 
     <!-- Scripts -->

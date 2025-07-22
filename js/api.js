@@ -91,6 +91,21 @@ class ApiService {
     localStorage.removeItem('authToken');
   }
 
+  // Password Reset
+  async forgotPassword(email) {
+    return await this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  async resetPassword(token, newPassword) {
+    return await this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword })
+    });
+  }
+
   // Products
   async getProducts(filters = {}) {
     console.log('🌐 DEBUG: API getProducts called with filters:', filters);

@@ -29,6 +29,9 @@ const App = {
       
       // Initialize video hover functionality
       VideoHoverComponent.init();
+      
+      // Initialize reset password component
+      ResetPasswordComponent.init();
     } catch (error) {
       console.error('Failed to initialize components:', error);
       // Show error message to user
@@ -250,6 +253,9 @@ const App = {
               `;
               console.log('🎯 Applied full-width inline styles to product detail page');
             }
+            break;
+          case 'resetPassword':
+            // Reset password page rendered from HTML
             break;
         }
       }

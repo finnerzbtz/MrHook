@@ -140,6 +140,108 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Password Reset Routes
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Check if user exists
+    const result = await db.query('SELECT id, email, first_name FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      // For security, don't reveal if email exists or not
+      return res.json({ message: 'If an account with that email exists, we have sent a password reset link.' });
+    }
+
+    const user = result.rows[0];
+
+    // Generate reset token (for demo purposes, using a simple token)
+    const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Store reset token in database (add columns if they don't exist)
+    try {
+      await db.query(`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMP
+      `);
+    } catch (error) {
+      console.log('Reset token columns already exist or error adding them:', error.message);
+    }
+
+    await db.query(
+      'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE email = $3',
+      [resetToken, tokenExpiry, email]
+    );
+
+    // In a real application, you would send an email here
+    // For demo purposes, we'll just log the reset link
+    console.log(`🔗 Password reset link for ${email}: http://localhost:5000/reset-password?token=${resetToken}`);
+
+    res.json({ 
+      message: 'If an account with that email exists, we have sent a password reset link.',
+      // For demo purposes, include the token in response (remove in production!)
+      resetToken: resetToken,
+      resetLink: `http://localhost:5000/reset-password?token=${resetToken}`
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Find user with valid reset token
+    const result = await db.query(
+      'SELECT id, email, reset_token_expiry FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    const user = result.rows[0];
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear reset token
+    await db.query(
+      'UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Product Routes
 app.get('/api/products', async (req, res) => {
   try {
