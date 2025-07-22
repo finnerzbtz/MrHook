@@ -720,7 +720,7 @@ async function startServer() {
     
     await db.initTables();
     
-    // Ensure home_address column exists (fallback)
+    // Ensure required columns exist (fallback)
     if (db.pool) {
       try {
         await db.query(`
@@ -729,6 +729,15 @@ async function startServer() {
         console.log('✅ Ensured home_address column exists');
       } catch (error) {
         console.log('ℹ️ home_address column check:', error.message);
+      }
+
+      try {
+        await db.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_placed BOOLEAN DEFAULT FALSE
+        `);
+        console.log('✅ Ensured order_placed column exists');
+      } catch (error) {
+        console.log('ℹ️ order_placed column check:', error.message);
       }
     }
     
