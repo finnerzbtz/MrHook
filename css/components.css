@@ -685,12 +685,13 @@
 
 /* Authentication Styles */
 .auth-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 80px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #324380 0%, rgba(50, 67, 128, 0.9) 100%);
+  margin-top: 80px;
+  background: var(--gray-50);
 }
 
 .auth-wrapper {
