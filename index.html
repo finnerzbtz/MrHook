@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mr Hook's premier fishing supplies store - quality rods, hooks, bait, and tackle">
+    <meta name="keywords" content="fishing, supplies, rods, hooks, bait, tackle, fishing gear">
+    <title>Mr Hook - Premium Fishing Supplies</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="loading-text">Mr Hook</div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" id="mainHeader">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <i class="fas fa-fish logo-icon"></i>
+                    <span class="logo-text">Mr Hook</span>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="nav-desktop">
+                    <a href="#" class="nav-link active" data-page="home">Products</a>
+                    <a href="#" class="nav-link" data-page="profile">Profile</a>
+                    <a href="#" class="nav-link cart-link" data-page="basket">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span class="cart-count">0</span>
+                    </a>
+                    <a href="#" class="nav-link" data-page="login">Login</a>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-content">
+                <a href="#" class="mobile-nav-link" data-page="home">
+                    <i class="fas fa-fish"></i>
+                    Products
+                </a>
+                <a href="#" class="mobile-nav-link" data-page="profile">
+                    <i class="fas fa-user"></i>
+                    Profile
+                </a>
+                <a href="#" class="mobile-nav-link" data-page="basket">
+                    <i class="fas fa-shopping-basket"></i>
+                    Basket (<span class="mobile-cart-count">0</span>)
+                </a>
+                <a href="#" class="mobile-nav-link" data-page="login">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Category Sections -->
+        <section class="categories-section" id="categoriesSection">
+            <div class="container">
+                <div class="categories-grid">
+                    <!-- Fishing Rods Category -->
+                    <div class="category-card" data-category="fishing-rods">
+                        <div class="category-image-container">
+                            <img src="assets/pexels-brent-keane-181485-1687242.jpg" alt="Fishing Rods" class="category-image">
+                            <video class="category-video" muted loop preload="metadata">
+                                <source src="assets/The_boat_gently_202507220144.mp4" type="video/mp4">
+                            </video>
+                            <div class="category-overlay"></div>
+                        </div>
+                        <div class="category-content">
+                            <h2 class="category-title">FISHING RODS</h2>
+                            <p class="category-subtitle">Premium Carbon Fiber & Spinning Reels</p>
+                            <button class="btn btn-primary category-btn" onclick="filterByCategory('fishing-rods')">
+                                Shop Rods <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bait & Hooks Category -->
+                    <div class="category-card" data-category="bait-hooks">
+                        <div class="category-image-container">
+                            <img src="assets/pexels-cottonbro-4822295.jpg" alt="Bait & Hooks" class="category-image">
+                            <video class="category-video" muted loop preload="metadata">
+                                <source src="assets/A_hand_reaches_202507220135.mp4" type="video/mp4">
+                            </video>
+                            <div class="category-overlay"></div>
+                        </div>
+                        <div class="category-content">
+                            <h2 class="category-title">BAIT & HOOKS</h2>
+                            <p class="category-subtitle">Fresh Bait & Premium Hook Sets</p>
+                            <button class="btn btn-primary category-btn" onclick="filterByCategory('bait-hooks')">
+                                Shop Bait <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Containers & More Category -->
+                    <div class="category-card" data-category="containers-more">
+                        <div class="category-image-container">
+                            <img src="assets/pexels-karolina-grabowska-6478094.jpg" alt="Containers & More" class="category-image">
+                            <video class="category-video" muted loop preload="metadata">
+                                <source src="assets/The_artificial_fish_202507220142.mp4" type="video/mp4">
+                            </video>
+                            <div class="category-overlay"></div>
+                        </div>
+                        <div class="category-content">
+                            <h2 class="category-title">CONTAINERS & MORE</h2>
+                            <p class="category-subtitle">Tackle Boxes, Lines & Essential Gear</p>
+                            <button class="btn btn-primary category-btn" onclick="filterByCategory('containers-more')">
+                                Shop Gear <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section class="products-section" id="productsSection">
+            <div class="container">
+                <!-- Filters -->
+                <div class="filters-container">
+                    <div class="filters-header">
+                        <h2>Our Products</h2>
+                        <button class="filters-toggle" id="filtersToggle">
+                            <i class="fas fa-filter"></i>
+                            Filters
+                        </button>
+                    </div>
+                    
+                    <div class="filters" id="filters">
+                        <div class="filter-group">
+                            <label for="searchInput">Search Products</label>
+                            <input type="text" id="searchInput" placeholder="Search by name..." class="filter-input">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="categoryFilter">Category</label>
+                            <select id="categoryFilter" class="filter-select">
+                                <option value="">All Categories</option>
+                                <option value="fishing-rods">Fishing Rods</option>
+                                <option value="hooks">Hooks</option>
+                                <option value="bait">Bait</option>
+                                <option value="containers">Containers</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="priceRange">Price Range</label>
+                            <div class="price-range-container">
+                                <input type="range" id="priceRange" min="0" max="200" value="200" class="price-slider">
+                                <div class="price-display">£0 - £<span id="priceValue">200</span></div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-secondary reset-filters" onclick="resetFilters()">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+
+                <!-- Product Detail Modal -->
+                <div class="modal" id="productModal">
+                    <div class="modal-content">
+                        <button class="modal-close" onclick="closeProductModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="product-detail" id="productDetail">
+                            <!-- Product details will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pages Container -->
+        <div class="pages-container">
+            <!-- Login/Signup Page -->
+            <section class="page login-page" id="loginPage">
+                <div class="container">
+                    <div class="auth-container">
+                        <div class="auth-header">
+                            <h2>Welcome Back</h2>
+                            <p>Sign in to your account or create a new one</p>
+                        </div>
+                        
+                        <div class="auth-tabs">
+                            <button class="auth-tab active" data-tab="login">Login</button>
+                            <button class="auth-tab" data-tab="signup">Sign Up</button>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form class="auth-form active" id="loginForm">
+                            <div class="form-group">
+                                <label for="loginEmail">Email</label>
+                                <input type="email" id="loginEmail" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" required class="form-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary auth-btn">
+                                Login <i class="fas fa-sign-in-alt"></i>
+                            </button>
+                            <a href="#" class="forgot-password">Forgot Password?</a>
+                        </form>
+
+                        <!-- Signup Form -->
+                        <form class="auth-form" id="signupForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="firstName">First Name</label>
+                                    <input type="text" id="firstName" required class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="lastName">Last Name</label>
+                                    <input type="text" id="lastName" required class="form-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupEmail">Email</label>
+                                <input type="email" id="signupEmail" required class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea id="address" required class="form-input form-textarea" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="signupPassword">Password</label>
+                                <input type="password" id="signupPassword" required class="form-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary auth-btn">
+                                Create Account <i class="fas fa-user-plus"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Page -->
+            <section class="page profile-page" id="profilePage">
+                <div class="container">
+                    <div class="profile-container">
+                        <h2>My Profile</h2>
+                        
+                        <div class="profile-content">
+                            <div class="profile-section">
+                                <h3>Personal Information</h3>
+                                <div class="profile-info" id="profileInfo">
+                                    <!-- Profile info will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div class="profile-section">
+                                <h3>Order History</h3>
+                                <div class="orders-list" id="ordersList">
+                                    <!-- Orders will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Basket Page -->
+            <section class="page basket-page" id="basketPage">
+                <div class="container">
+                    <div class="basket-container">
+                        <h2>My Basket</h2>
+                        
+                        <div class="basket-content" id="basketContent">
+                            <!-- Basket content will be populated by JavaScript -->
+                        </div>
+                        
+                        <div class="basket-summary" id="basketSummary">
+                            <!-- Basket summary will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <i class="fas fa-fish logo-icon"></i>
+                        <span class="logo-text">Mr Hook</span>
+                    </div>
+                    <p>Premium fishing supplies for every angler</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#" data-page="home">Products</a></li>
+                        <li><a href="#" data-page="profile">Profile</a></li>
+                        <li><a href="#" data-page="basket">Basket</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📧 info@mrhook.co.uk</p>
+                    <p>📞 +44 123 456 7890</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Mr Hook Fishing Supplies. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Toast -->
+    <div class="toast" id="successToast">
+        <div class="toast-content">
+            <i class="fas fa-check-circle"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
