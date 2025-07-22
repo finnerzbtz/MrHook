@@ -142,7 +142,7 @@ const Cart = {
 const Auth = {
   // Get current user
   getCurrentUser() {
-    return Storage.get('currentUser');
+    return JSON.parse(localStorage.getItem('currentUser'));
   },
 
   // Login user
@@ -199,13 +199,15 @@ const Auth = {
 
   // Logout user
   logout() {
-    Storage.remove('currentUser');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
+    API.logout();
     Cart.clear();
   },
 
   // Check if user is logged in
   isLoggedIn() {
-    return !!Storage.get('currentUser');
+    return !!localStorage.getItem('authToken') && !!localStorage.getItem('currentUser');
   },
 
   // Show forgot password form

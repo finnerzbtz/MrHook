@@ -199,7 +199,7 @@ function filterByCategory(categoryType) {
 // Authentication Component
 const AuthComponent = {
   // Handle login form
-  handleLogin(event) {
+  async handleLogin(event) {
     event.preventDefault();
 
     const email = document.getElementById('loginEmail').value.trim();
@@ -215,13 +215,18 @@ const AuthComponent = {
       return;
     }
 
-    const user = Auth.login(email, password);
-    if (user) {
-      Toast.show(`Welcome back, ${user.firstName}!`);
+    try {
+      const response = await API.login(email, password);
+      
+      // Store user data locally for Auth.getCurrentUser()
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      
+      Toast.show(`Welcome back, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
-    } else {
-      Toast.show('Invalid email or password', 'error');
+    } catch (error) {
+      console.error('Login error:', error);
+      Toast.show(error.message || 'Invalid email or password', 'error');
     }
   },
 
