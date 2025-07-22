@@ -296,14 +296,29 @@ const ProductsComponent = {
         console.log('🎯 DEBUG: Cleared any blocking inline styles');
       }
 
-      // Populate product detail page
+      // Populate product detail page with forced full-width grid
       container.innerHTML = `
-        <div class="product-detail-layout">
-          <div class="product-detail-image-section">
+        <div class="product-detail-layout" style="
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          width: 100vw !important;
+          height: calc(100vh - 80px) !important;
+          margin: 80px 0 0 0 !important;
+          padding: 0 !important;
+        ">
+          <div class="product-detail-image-section" style="
+            width: 100% !important;
+            height: 100% !important;
+            padding: var(--space-8) !important;
+          ">
             <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
           </div>
           
-          <div class="product-detail-info-section">
+          <div class="product-detail-info-section" style="
+            width: 100% !important;
+            height: 100% !important;
+            padding: var(--space-8) var(--space-10) !important;
+          ">
             <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
             <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
             <div class="product-detail-price">${formatPrice(product.price)}</div>
