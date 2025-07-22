@@ -260,17 +260,21 @@ async function filterByCategory(categoryType) {
   if (priceRange) priceRange.value = '200';
   if (priceValue) priceValue.textContent = '200';
 
-  // Set category filter based on the category type - match backend categories
+  // Set category filter based on the category type - match backend categories exactly
   let filterValue = '';
   switch(categoryType) {
     case 'fishing-rods':
-      filterValue = 'fishing-rods';
+      filterValue = 'rods';  // Backend uses 'rods' not 'fishing-rods'
       break;
     case 'bait-hooks':
-      filterValue = 'bait';
+      // For combined category, use search to find both bait and hooks
+      filterValue = '';
+      if (searchInput) searchInput.value = 'bait hooks';
       break;
     case 'containers-more':
-      filterValue = 'containers';
+      // For combined category, use search to find containers and other
+      filterValue = '';
+      if (searchInput) searchInput.value = 'containers other';
       break;
     default:
       filterValue = '';
@@ -344,33 +348,17 @@ const AuthComponent = {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
+    const homeAddress = document.getElementById('homeAddress').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !homeAddress || !password || !confirmPassword) {
       Toast.show('Please fill in all fields', 'error');
       return;
     }
 
     if (password !== confirmPassword) {
       Toast.show('Passwords do not match', 'error');
-      return;
-    }
-
-    // Get address from form fields
-    const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
-    const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
-    const city = document.getElementById('city')?.value.trim() || '';
-    const postcode = document.getElementById('postcode')?.value.trim() || '';
-    const county = document.getElementById('county')?.value.trim() || '';
-
-    // Build home address string
-    const addressParts = [addressLine1, addressLine2, city, postcode, county].filter(part => part);
-    const homeAddress = addressParts.join(', ');
-
-    // Validate required address fields
-    if (!addressLine1 || !city || !postcode) {
-      Toast.show('Please complete your address details', 'error');
       return;
     }
 
@@ -392,9 +380,9 @@ const AuthComponent = {
         homeAddress,
         password 
       };
-
+      
       const response = await API.register(userData);
-
+      
       Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
