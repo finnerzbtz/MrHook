@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -253,13 +252,13 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
     }
 
     const product = productResult.rows[0];
-    
+
     // Check current cart quantity
     const currentCartResult = await db.query(
       'SELECT quantity FROM cart_items WHERE user_id = $1 AND product_id = $2',
       [req.user.id, productId]
     );
-    
+
     const currentCartQuantity = currentCartResult.rows.length > 0 ? currentCartResult.rows[0].quantity : 0;
     const totalRequestedQuantity = currentCartQuantity + quantity;
 
@@ -489,7 +488,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       // Check stock availability before processing
       const stockCheck = await db.query('SELECT stock FROM products WHERE id = $1', [item.product_id]);
       const availableStock = stockCheck.rows[0].stock;
-      
+
       if (item.quantity > availableStock) {
         return res.status(400).json({ 
           message: `Insufficient stock for ${item.name}. Only ${availableStock} items available.`,
@@ -501,13 +500,13 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       }
 
       const subtotal = parseFloat(item.price) * item.quantity;
-      
+
       // Create order item
       await db.query(
         'INSERT INTO order_items (product_id, order_id, quantity, subtotal) VALUES ($1, $2, $3, $4)',
         [item.product_id, order.id, item.quantity, subtotal]
       );
-      
+
       // Reduce stock
       await db.query(
         'UPDATE products SET stock = stock - $1 WHERE id = $2',
@@ -653,7 +652,7 @@ app.post('/api/stock/check', async (req, res) => {
 
     for (const item of items) {
       const result = await db.query('SELECT id, name, stock FROM products WHERE id = $1', [item.productId]);
-      
+
       if (result.rows.length === 0) {
         stockChecks.push({
           productId: item.productId,
@@ -666,7 +665,7 @@ app.post('/api/stock/check', async (req, res) => {
       } else {
         const product = result.rows[0];
         const inStock = product.stock >= item.quantity;
-        
+
         stockChecks.push({
           productId: product.id,
           productName: product.name,
@@ -874,9 +873,9 @@ async function startServer() {
   try {
     console.log('🔄 Initializing database...');
     console.log(`📋 DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
-    
+
     await db.initTables();
-    
+
     // Ensure required columns exist (fallback)
     if (db.pool) {
       try {
@@ -906,12 +905,12 @@ async function startServer() {
         console.log('ℹ️ total_price column check:', error.message);
       }
     }
-    
+
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
       console.log(`🌐 Access your app at: http://localhost:${PORT}`);
       console.log(`📊 Database: ${db.pool ? 'PostgreSQL Connected' : 'In-memory fallback'}`);
-      
+
       if (!db.pool) {
         console.log('⚠️  To enable database features:');
         console.log('   1. Open Database tab in Replit');

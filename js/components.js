@@ -260,11 +260,11 @@ async function filterByCategory(categoryType) {
   if (priceRange) priceRange.value = '200';
   if (priceValue) priceValue.textContent = '200';
 
-  // Set category filter based on the category type
+  // Set category filter based on the category type - match backend categories
   let filterValue = '';
   switch(categoryType) {
     case 'fishing-rods':
-      filterValue = 'rods';
+      filterValue = 'fishing-rods';
       break;
     case 'bait-hooks':
       filterValue = 'bait';
