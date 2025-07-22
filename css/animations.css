@@ -21,6 +21,8 @@
 .loading-spinner {
   text-align: center;
   color: var(--white);
+  position: relative;
+  z-index: 2;
 }
 
 .spinner-ring {
@@ -552,6 +554,8 @@ html {
 .loading-spinner {
   text-align: center;
   color: var(--white);
+  position: relative;
+  z-index: 2;
 }
 
 /* Swimming Fish Animation */

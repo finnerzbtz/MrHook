@@ -665,6 +665,10 @@ a:hover {
   width: 90%;
   transition: transform var(--transition-base);
   opacity: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .category-card:hover .category-content {
@@ -679,11 +683,16 @@ a:hover {
   margin-bottom: var(--space-3);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   color: var(--white);
+  line-height: 1.2;
+  height: 2.4em;
+  display: flex;
+  align-items: center;
 }
 
 @media (min-width: 768px) {
   .category-title {
     font-size: var(--font-size-4xl);
+    height: 2.4em;
   }
 }
 
@@ -694,6 +703,10 @@ a:hover {
   opacity: 0.9;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
   color: var(--gray-100);
+  line-height: 1.4;
+  height: 1.4em;
+  display: flex;
+  align-items: center;
 }
 
 .category-btn {
@@ -704,6 +717,11 @@ a:hover {
   font-weight: 600;
   padding: var(--space-3) var(--space-6);
   transition: all var(--transition-base);
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
 }
 
 .category-btn:hover {
