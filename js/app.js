@@ -30,17 +30,18 @@ const App = {
     });
 
     // Navigation links
-    document.addEventListener('click', (e) => {
-      if (e.target.hasAttribute('data-page')) {
+    document.addEventListener('click', debounce((e) => {
+      if (e.target.hasAttribute('data-page') || e.target.closest('[data-page]')) {
         e.preventDefault();
-        const page = e.target.getAttribute('data-page');
+        const target = e.target.hasAttribute('data-page') ? e.target : e.target.closest('[data-page]');
+        const page = target.getAttribute('data-page');
         this.showPage(page);
 
         // Close mobile menu if open
         mobileMenuBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
       }
-    });
+    }, 150));
 
     // Close mobile menu when clicking outside
     document.addEventListener('click', (e) => {

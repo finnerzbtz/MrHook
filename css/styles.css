@@ -224,6 +224,16 @@ a:hover {
 
 .cart-link {
   position: relative;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cart-link:active {
+  transform: scale(0.95);
 }
 
 .cart-count {
@@ -238,6 +248,8 @@ a:hover {
   border-radius: var(--border-radius-full);
   min-width: 18px;
   text-align: center;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Mobile Menu */

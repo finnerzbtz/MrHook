@@ -388,14 +388,20 @@ function animateOnScroll() {
   });
 }
 
+// Toggle password visibility
+function togglePassword(inputId) {
+  const passwordInput = document.getElementById(inputId);
+  const icon = document.getElementById(inputId + 'Icon');
+
+  if (!passwordInput || !icon) return;
+
+  const isPassword = passwordInput.type === 'password';
+
+  passwordInput.type = isPassword ? 'text' : 'password';
+  icon.className = isPassword ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
 // Initialize utilities
 function initUtils() {
-  // Update cart UI on page load
-  Cart.updateCartUI();
-
-  // Add scroll listener for animations
-  window.addEventListener('scroll', throttle(animateOnScroll, 100));
-
-  // Initialize animations
-  setTimeout(animateOnScroll, 100);
+  console.log('Utils initialized');
 }
