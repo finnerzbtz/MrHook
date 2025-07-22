@@ -572,7 +572,7 @@ html {
 
 .fish-icon {
   font-size: 2.5rem;
-  color: var(--secondary-color);
+  color: #FF5A08;
   filter: drop-shadow(0 4px 12px rgba(255, 90, 8, 0.6));
   animation: fishCircleSwim 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
   position: absolute;
@@ -580,37 +580,6 @@ html {
   z-index: 10;
   display: block;
   opacity: 1;
-}
-
-/* Fish Trail Effect */
-.fish-icon::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 30px;
-  height: 30px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: fishTrail 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
-  z-index: -1;
-  pointer-events: none;
-}
-
-@keyframes fishTrail {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.4;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.2;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.4;
-  }
 }
 
 @keyframes fishCircleSwim {
