@@ -635,15 +635,26 @@ const ResetPasswordComponent = {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     
+    console.log('🔍 ResetPasswordComponent.init() - Token detected:', token);
+    
     if (token) {
       this.currentToken = token;
+      console.log('🎯 Token found, showing reset password page');
       App.showPage('resetPassword');
-    }
-
-    // Add form listener
-    const form = document.getElementById('resetPasswordForm');
-    if (form) {
-      form.addEventListener('submit', this.handleResetPassword.bind(this));
+      
+      // Add form listener
+      const form = document.getElementById('resetPasswordForm');
+      if (form) {
+        form.addEventListener('submit', this.handleResetPassword.bind(this));
+        console.log('✅ Reset password form listener added');
+      } else {
+        console.log('❌ Reset password form not found');
+      }
+      
+      return true; // Token found
+    } else {
+      console.log('ℹ️ No token found in URL');
+      return false; // No token
     }
   },
 

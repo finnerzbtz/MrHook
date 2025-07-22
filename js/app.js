@@ -10,7 +10,13 @@ const App = {
     // Initialize backend-driven components
     await this.initializeComponents();
     
-    this.showPage('home');
+    // Check for password reset token AFTER everything is initialized
+    const hasResetToken = ResetPasswordComponent.init();
+    
+    // Only show home page if we're not handling a password reset
+    if (!hasResetToken) {
+      this.showPage('home');
+    }
     initUtils();
 
     console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
@@ -29,9 +35,6 @@ const App = {
       
       // Initialize video hover functionality
       VideoHoverComponent.init();
-      
-      // Initialize reset password component
-      ResetPasswordComponent.init();
     } catch (error) {
       console.error('Failed to initialize components:', error);
       // Show error message to user
@@ -223,8 +226,12 @@ const App = {
 
       // Show specific page
       const targetPage = document.getElementById(`${pageName}Page`);
+      console.log(`🔍 App.showPage() - Looking for page: ${pageName}Page`);
+      console.log(`🎯 App.showPage() - Target page found:`, !!targetPage);
+      
       if (targetPage) {
         targetPage.classList.add('active', 'fade-in');
+        console.log(`✅ App.showPage() - Successfully showed page: ${pageName}Page`);
 
         // Render page content
         switch (pageName) {
