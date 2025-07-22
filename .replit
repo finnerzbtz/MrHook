@@ -1,14 +1,15 @@
 language = "html"
-run = "npm start"
+run = "npm run dev"
+modules = ["nodejs-14", "web", "nix"]
 
 [deployment]
-run = ["sh", "-c", "npm start"]
+run = ["sh", "-c", "npm run dev"]
 
 [env]
 XDG_CONFIG_HOME = "/home/runner/.config"
 
 [nix]
-channel = "stable-22_11"
+channel = "stable-24_05"
 
 [languages.html]
 pattern = "**/*.html"
@@ -70,3 +71,7 @@ pattern = "**/{*.less,*.scss,*.css}"
     [languages.css.languageServer.configuration.css.hover]
     documentation = true
     references = true 
+
+[[ports]]
+localPort = 3000
+externalPort = 80

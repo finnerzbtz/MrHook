@@ -10,7 +10,15 @@
     "build": "echo 'Static site - no build process needed'",
     "test": "echo 'No tests configured'"
   },
-  "keywords": ["fishing", "ecommerce", "vanilla-js", "css", "replit", "e-commerce", "responsive"],
+  "keywords": [
+    "fishing",
+    "ecommerce",
+    "vanilla-js",
+    "css",
+    "replit",
+    "e-commerce",
+    "responsive"
+  ],
   "author": "Mr Hook Fishing Supplies",
   "license": "MIT",
   "engines": {
@@ -27,4 +35,4 @@
     "language": "html",
     "run": "npm start"
   }
-} 
+}
