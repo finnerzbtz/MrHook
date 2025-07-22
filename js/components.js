@@ -273,56 +273,73 @@ const ProductsComponent = {
     console.log('🎉 DEBUG: render() completed successfully');
   },
 
-  // Show product detail modal
+  // Show product detail page
   async showProductDetail(productId) {
     try {
+      console.log('🔍 DEBUG: Loading product detail page for product:', productId);
+      
       // Get product details from backend
       const product = await API.getProduct(productId);
+      console.log('📦 DEBUG: Product loaded:', product.name);
 
-      const modal = document.getElementById('productModal');
-      const detail = document.getElementById('productDetail');
-
-      // Check if modal elements exist
-      if (!modal || !detail) {
-        console.error('Product modal elements not found');
-        Toast.show('Product details cannot be displayed', 'error');
+      const container = document.getElementById('productDetailContent');
+      if (!container) {
+        console.error('❌ DEBUG: Product detail container not found!');
         return;
       }
 
-      detail.innerHTML = `
-        <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
-        <div class="product-detail-info">
-          <h2 class="product-detail-name">${escapeHtml(product.name)}</h2>
-          <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
-          <div class="product-detail-price">${formatPrice(product.price)}</div>
-          <p class="product-detail-description">${escapeHtml(product.description)}</p>
-        </div>
-        <div class="quantity-selector">
-          <label>Quantity:</label>
-          <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
-            <i class="fas fa-minus"></i>
-          </button>
-          <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
-          <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
-            <i class="fas fa-plus"></i>
-          </button>
-        </div>
-        <div class="product-actions">
-          <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
-            <i class="fas fa-shopping-basket"></i>
-            Add to Basket
-          </button>
-          <button class="btn btn-outline" onclick="closeProductModal()">
-            <i class="fas fa-arrow-left"></i>
-            Back to Products
-          </button>
+      // Populate product detail page
+      container.innerHTML = `
+        <div class="product-detail-layout">
+          <div class="product-detail-image-section">
+            <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
+          </div>
+          
+          <div class="product-detail-info-section">
+            <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
+            <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
+            <div class="product-detail-price">${formatPrice(product.price)}</div>
+            
+            <div class="product-detail-description">
+              <h3>Description</h3>
+              <p>${escapeHtml(product.description)}</p>
+            </div>
+            
+            <div class="product-detail-actions">
+              <div class="quantity-selector">
+                <label for="productQuantity">Quantity:</label>
+                <div class="quantity-controls">
+                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
+                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="product-actions">
+                <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
+                  <i class="fas fa-shopping-basket"></i>
+                  Add to Basket
+                </button>
+                <button class="btn btn-outline" onclick="App.showPage('home')">
+                  <i class="fas fa-arrow-left"></i>
+                  Continue Shopping
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       `;
 
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      // Show the product detail page
+      App.showPage('productDetail');
+      console.log('✅ DEBUG: Product detail page displayed successfully');
+      
     } catch (error) {
-      console.error('Failed to load product details:', error);
+      console.error('❌ DEBUG: Failed to load product details:', error);
       Toast.show('Failed to load product details', 'error');
     }
   },
@@ -358,7 +375,8 @@ const ProductsComponent = {
       const product = this.allProducts.find(p => p.id === productId);
       Toast.show(`${product?.name || 'Product'} added to basket!`);
 
-      closeProductModal();
+      // Close the product detail page and return to home
+      App.showPage('home');
     } catch (error) {
       console.error('Failed to add to cart:', error);
       Toast.show('Failed to add item to basket', 'error');
@@ -1153,15 +1171,6 @@ const VideoHoverComponent = {
   }
 };
 
-// Close product modal
-function closeProductModal() {
-  const modal = document.getElementById('productModal');
-  if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
-}
-
 // CRITICAL: Export functions globally for onclick handlers and component access
 window.ProductsComponent = {
   init: ProductsComponent.init.bind(ProductsComponent),
@@ -1179,7 +1188,6 @@ window.BasketComponent = BasketComponent;
 window.VideoHoverComponent = VideoHoverComponent;
 
 // Global utility functions
-window.closeProductModal = closeProductModal;
 window.filterByCategory = filterByCategory;
 
 console.log('✅ All global functions exposed successfully!');

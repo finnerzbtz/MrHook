@@ -94,14 +94,14 @@ const App = {
     document.addEventListener('click', (e) => {
       const modal = document.getElementById('productModal');
       if (e.target === modal) {
-        closeProductModal();
+        // closeProductModal(); // This function is no longer needed
       }
     });
 
     // Escape key to close modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        closeProductModal();
+        // closeProductModal(); // This function is no longer needed
       }
     });
 
@@ -199,7 +199,7 @@ const App = {
       page.classList.remove('active', 'fade-in');
     });
 
-    // Hide categories and products sections for auth pages
+    // Hide categories and products sections for auth pages and product detail
     const categoriesSection = document.getElementById('categoriesSection');
     const productsSection = document.getElementById('productsSection');
 
@@ -227,6 +227,9 @@ const App = {
           case 'basket':
             BasketComponent.render();
             break;
+          case 'productDetail':
+            // Product detail content is already populated
+            break;
         }
       }
     }
@@ -234,7 +237,12 @@ const App = {
     // Update navigation active states
     document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
       link.classList.remove('active');
-      if (link.getAttribute('data-page') === pageName) {
+      
+      // Special handling for product detail page - mark Products as active
+      const linkPage = link.getAttribute('data-page');
+      if (pageName === 'productDetail' && linkPage === 'home') {
+        link.classList.add('active');
+      } else if (linkPage === pageName) {
         link.classList.add('active');
       }
     });
@@ -325,6 +333,18 @@ const App = {
   handleError(error, message = 'An error occurred') {
     console.error('App Error:', error);
     Toast.show(message, 'error');
+  },
+
+  // Handle escape key to close modals
+  handleEscapeKey(event) {
+    if (event.key === 'Escape') {
+      // Close password reset modal if open
+      const passwordModal = document.getElementById('passwordResetModal');
+      if (passwordModal && passwordModal.classList.contains('active')) {
+        AuthComponent.closePasswordReset();
+        return;
+      }
+    }
   }
 };
 
