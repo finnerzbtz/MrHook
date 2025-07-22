@@ -418,6 +418,11 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
       return res.status(500).json({ message: 'Database not available' });
     }
 
+    // Validate input
+    if (!firstName || !lastName) {
+      return res.status(400).json({ message: 'First name and last name are required' });
+    }
+
     // Update user in database
     const result = await db.query(
       `UPDATE users 
@@ -427,8 +432,17 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
        WHERE id = $9 
        RETURNING id, email, first_name, last_name, phone, 
                  address_line1, address_line2, city, postcode, county`,
-      [firstName, lastName, phone, address?.line1 || '', address?.line2 || '', 
-       address?.city || '', address?.postcode || '', address?.county || '', req.user.id]
+      [
+        firstName, 
+        lastName, 
+        phone || '', 
+        address?.line1 || '', 
+        address?.line2 || '', 
+        address?.city || '', 
+        address?.postcode || '', 
+        address?.county || '', 
+        req.user.id
+      ]
     );
 
     if (result.rows.length === 0) {

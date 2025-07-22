@@ -251,13 +251,28 @@ const AuthComponent = {
       return;
     }
 
-    // Validate address using AddressLookup
-    if (!AddressLookup.validateAddress()) {
+    // Get address from form fields
+    const phone = document.getElementById('signupPhone')?.value.trim() || '';
+    const addressLine1 = document.getElementById('signupAddressLine1')?.value.trim() || '';
+    const addressLine2 = document.getElementById('signupAddressLine2')?.value.trim() || '';
+    const city = document.getElementById('signupCity')?.value.trim() || '';
+    const postcode = document.getElementById('signupPostcode')?.value.trim() || '';
+    const county = document.getElementById('signupCounty')?.value.trim() || '';
+
+    // Validate required address fields
+    if (!addressLine1 || !city || !postcode) {
       Toast.show('Please complete your address details', 'error');
       return;
     }
 
-    const address = AddressLookup.getFormattedAddress();
+    const address = {
+      phone,
+      line1: addressLine1,
+      line2: addressLine2,
+      city,
+      postcode,
+      county
+    };
 
     if (!isValidEmail(email)) {
       Toast.show('Please enter a valid email address', 'error');

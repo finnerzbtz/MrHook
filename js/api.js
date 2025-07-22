@@ -1,9 +1,11 @@
 
-class ApiService {
-  constructor() {
-    this.baseURL = window.location.origin;
-    this.token = localStorage.getItem('authToken');
-  }
+// Check if ApiService already exists to prevent duplicate declarations
+if (typeof ApiService === 'undefined') {
+  class ApiService {
+    constructor() {
+      this.baseURL = window.location.origin;
+      this.token = localStorage.getItem('authToken');
+    }
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}/api${endpoint}`;
@@ -138,5 +140,11 @@ class ApiService {
   }
 }
 
-// Create global API instance
-const API = new ApiService();
+}
+
+  // Create global API instance
+  window.API = new ApiService();
+} else {
+  // API already exists, just ensure it's available globally
+  window.API = window.API || API;
+}
