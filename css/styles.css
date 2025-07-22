@@ -639,14 +639,26 @@ a:hover {
   /* Mobile video autoplay enhancements */
   .category-video {
     transition: opacity 350ms ease-in-out;
+    transform: scale(1.05); /* Slight zoom to prevent black borders on mobile */
   }
   
   .category-video.playing {
     opacity: 1;
     transition: opacity 350ms ease-in-out;
+    transform: scale(1.05); /* Maintain zoom when playing */
   }
   
   .category-image.hidden {
     transition: opacity 350ms ease-in-out;
+  }
+  
+  /* Specific fix for containers-more video to match hover zoom */
+  .category-card[data-category="containers-more"] .category-video {
+    transform: scale(1.1);
+    object-position: center center;
+  }
+  
+  .category-card[data-category="containers-more"] .category-video.playing {
+    transform: scale(1.1);
   }
 } 
