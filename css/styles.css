@@ -187,8 +187,9 @@ a:hover {
 }
 
 .logo:hover .logo-icon {
-  transform: scale(1.1);
-  color: var(--primary-color);
+  transform: scale(1.1) rotate(-5deg);
+  color: var(--secondary-color);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 /* Navigation */
