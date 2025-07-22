@@ -191,6 +191,43 @@
   font-size: var(--font-size-sm);
 }
 
+/* Address Lookup */
+.postcode-container {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.postcode-input {
+  flex: 1;
+}
+
+.postcode-lookup {
+  min-width: 80px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.address-select {
+  margin-bottom: var(--space-4);
+}
+
+.address-manual-toggle {
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: var(--space-2);
+  display: block;
+}
+
+.address-fields {
+  transition: all var(--transition-base);
+}
+
+.address-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* Filters */
 .filters-container {
   margin-bottom: var(--space-8);

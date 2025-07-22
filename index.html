@@ -258,8 +258,40 @@
                                 <input type="email" id="signupEmail" required class="form-input">
                             </div>
                             <div class="form-group">
-                                <label for="address">Address</label>
-                                <textarea id="address" required class="form-input form-textarea" rows="3"></textarea>
+                                <label for="postcode">Postcode</label>
+                                <div class="postcode-container">
+                                    <input type="text" id="postcode" required class="form-input postcode-input" placeholder="Enter UK postcode">
+                                    <button type="button" class="btn btn-secondary postcode-lookup" onclick="AddressLookup.findAddress()">
+                                        <i class="fas fa-search"></i>
+                                        Find
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="addressSelect">Select Address</label>
+                                <select id="addressSelect" class="form-input address-select" style="display: none;" onchange="AddressLookup.fillAddress()">
+                                    <option value="">Please select an address...</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="houseNumber">House Number/Name</label>
+                                    <input type="text" id="houseNumber" required class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="streetName">Street Name</label>
+                                    <input type="text" id="streetName" required class="form-input">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" id="city" required class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="county">County</label>
+                                    <input type="text" id="county" class="form-input">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="signupPassword">Password</label>
@@ -359,6 +391,7 @@
     <!-- Scripts -->
     <script src="js/data.js"></script>
     <script src="js/utils.js"></script>
+    <script src="js/address-lookup.js"></script>
     <script src="js/components.js"></script>
     <script src="js/app.js"></script>
 </body>

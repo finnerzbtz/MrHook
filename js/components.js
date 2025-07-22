@@ -232,13 +232,19 @@ const AuthComponent = {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    const address = document.getElementById('address').value.trim();
     const password = document.getElementById('signupPassword').value;
 
-    if (!firstName || !lastName || !email || !address || !password) {
+    if (!firstName || !lastName || !email || !password) {
       Toast.show('Please fill in all fields', 'error');
       return;
     }
+
+    // Validate address using AddressLookup utility
+    if (!AddressLookup.validateAddress()) {
+      return;
+    }
+
+    const address = AddressLookup.getFormattedAddress();
 
     if (!isValidEmail(email)) {
       Toast.show('Please enter a valid email address', 'error');
