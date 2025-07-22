@@ -664,29 +664,29 @@ html {
 
 @keyframes bubbleRise {
   0% {
-    bottom: -50px;
+    bottom: -100px;
     opacity: 0;
-    transform: translateX(0px) scale(0.5);
+    transform: translateX(0px) scale(0.3);
   }
-  10% {
-    opacity: 0.6;
-    transform: translateX(3px) scale(0.8);
+  5% {
+    opacity: 0.4;
+    transform: translateX(2px) scale(0.6);
   }
-  30% {
-    opacity: 0.9;
-    transform: translateX(8px) scale(1);
-  }
-  60% {
+  20% {
     opacity: 0.8;
-    transform: translateX(12px) scale(1.1);
+    transform: translateX(6px) scale(0.9);
   }
-  90% {
-    opacity: 0.3;
-    transform: translateX(-5px) scale(0.9);
+  50% {
+    opacity: 0.9;
+    transform: translateX(10px) scale(1);
+  }
+  80% {
+    opacity: 0.5;
+    transform: translateX(-3px) scale(0.8);
   }
   100% {
-    bottom: calc(100% + 50px);
+    bottom: calc(100vh + 100px);
     opacity: 0;
-    transform: translateX(-10px) scale(0.6);
+    transform: translateX(-8px) scale(0.4);
   }
 }
