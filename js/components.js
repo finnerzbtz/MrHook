@@ -288,6 +288,25 @@ const ProductsComponent = {
         return;
       }
 
+      // DEBUG: Force CSS class application
+      const productDetailPage = document.getElementById('productDetailPage');
+      if (productDetailPage) {
+        productDetailPage.className = 'page product-detail-page active';
+        productDetailPage.style.cssText = `
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 9999 !important;
+          background: white !important;
+          display: block !important;
+        `;
+        console.log('🎯 DEBUG: Force-applied inline styles to product detail page');
+      }
+
       // Populate product detail page
       container.innerHTML = `
         <div class="product-detail-layout">
@@ -334,12 +353,13 @@ const ProductsComponent = {
         </div>
       `;
 
+      console.log('✅ DEBUG: Product detail content populated');
+      
       // Show the product detail page
       App.showPage('productDetail');
-      console.log('✅ DEBUG: Product detail page displayed successfully');
       
     } catch (error) {
-      console.error('❌ DEBUG: Failed to load product details:', error);
+      console.error('❌ Error loading product detail:', error);
       Toast.show('Failed to load product details', 'error');
     }
   },

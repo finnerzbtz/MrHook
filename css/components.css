@@ -1010,8 +1010,11 @@
   }
 }
 
-/* Product Detail Page - Full Width Approach */
-.product-detail-page {
+/* Product Detail Page - NUCLEAR FULL WIDTH APPROACH */
+.product-detail-page,
+.product-detail-page.active,
+section.product-detail-page,
+section.page.product-detail-page {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -1019,11 +1022,13 @@
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  max-width: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  z-index: 50 !important;
-  background: var(--white);
-  overflow-y: auto;
+  z-index: 9999 !important;
+  background: var(--white) !important;
+  overflow-y: auto !important;
+  display: block !important;
 }
 
 
