@@ -1,6 +1,6 @@
 language = "html"
 run = "npm run dev"
-modules = ["nodejs-14", "web", "nix"]
+modules = ["nodejs-14", "web", "nix", "postgresql-16"]
 
 [deployment]
 run = ["sh", "-c", "npm run dev"]
@@ -75,6 +75,10 @@ pattern = "**/{*.less,*.scss,*.css}"
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
 
 [workflows]
 runButton = "Backend Server"
