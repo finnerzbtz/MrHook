@@ -302,73 +302,237 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/cart/update', authenticateToken, (req, res) => {
-  const { productId, quantity } = req.body;
-  
-  if (!carts[req.user.id]) {
-    return res.status(404).json({ message: 'Cart not found' });
-  }
+app.put('/api/cart/update', authenticateToken, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
 
-  const itemIndex = carts[req.user.id].findIndex(item => item.productId === productId);
-  
-  if (itemIndex === -1) {
-    return res.status(404).json({ message: 'Item not found in cart' });
-  }
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
 
-  if (quantity <= 0) {
-    carts[req.user.id].splice(itemIndex, 1);
-  } else {
-    carts[req.user.id][itemIndex].quantity = quantity;
-  }
+    if (quantity <= 0) {
+      // Remove item if quantity is 0 or negative
+      await db.query(
+        'DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2',
+        [req.user.id, productId]
+      );
+    } else {
+      // Update quantity
+      const result = await db.query(
+        'UPDATE cart_items SET quantity = $1 WHERE user_id = $2 AND product_id = $3',
+        [quantity, req.user.id, productId]
+      );
 
-  res.json({ message: 'Cart updated', cart: carts[req.user.id] });
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: 'Item not found in cart' });
+      }
+    }
+
+    // Return updated cart
+    const cartResult = await db.query(`
+      SELECT ci.*, p.name, p.type, p.price, p.image, p.description, p.stock, p.category
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.user_id = $1
+    `, [req.user.id]);
+
+    const cart = cartResult.rows.map(row => ({
+      productId: row.product_id,
+      quantity: row.quantity,
+      product: {
+        id: row.product_id,
+        name: row.name,
+        type: row.type,
+        price: parseFloat(row.price),
+        image: row.image,
+        description: row.description,
+        stock: row.stock,
+        category: row.category
+      }
+    }));
+
+    res.json({ message: 'Cart updated', cart });
+  } catch (error) {
+    console.error('Cart update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.delete('/api/cart/remove/:productId', authenticateToken, (req, res) => {
-  const productId = parseInt(req.params.productId);
-  
-  if (!carts[req.user.id]) {
-    return res.status(404).json({ message: 'Cart not found' });
-  }
+app.delete('/api/cart/remove/:productId', authenticateToken, async (req, res) => {
+  try {
+    const productId = parseInt(req.params.productId);
 
-  carts[req.user.id] = carts[req.user.id].filter(item => item.productId !== productId);
-  
-  res.json({ message: 'Item removed from cart', cart: carts[req.user.id] });
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    const result = await db.query(
+      'DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2',
+      [req.user.id, productId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Item not found in cart' });
+    }
+
+    // Return updated cart
+    const cartResult = await db.query(`
+      SELECT ci.*, p.name, p.type, p.price, p.image, p.description, p.stock, p.category
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.user_id = $1
+    `, [req.user.id]);
+
+    const cart = cartResult.rows.map(row => ({
+      productId: row.product_id,
+      quantity: row.quantity,
+      product: {
+        id: row.product_id,
+        name: row.name,
+        type: row.type,
+        price: parseFloat(row.price),
+        image: row.image,
+        description: row.description,
+        stock: row.stock,
+        category: row.category
+      }
+    }));
+
+    res.json({ message: 'Item removed from cart', cart });
+  } catch (error) {
+    console.error('Cart remove error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.delete('/api/cart/clear', authenticateToken, (req, res) => {
-  carts[req.user.id] = [];
-  res.json({ message: 'Cart cleared' });
+app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    await db.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id]);
+    res.json({ message: 'Cart cleared' });
+  } catch (error) {
+    console.error('Cart clear error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Order Routes
-app.post('/api/orders', authenticateToken, (req, res) => {
-  const userCart = carts[req.user.id] || [];
-  
-  if (userCart.length === 0) {
-    return res.status(400).json({ message: 'Cart is empty' });
+app.post('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Get user's cart
+    const cartResult = await db.query(`
+      SELECT ci.*, p.name, p.type, p.price, p.image, p.description, p.stock, p.category
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.user_id = $1
+    `, [req.user.id]);
+
+    if (cartResult.rows.length === 0) {
+      return res.status(400).json({ message: 'Cart is empty' });
+    }
+
+    // Calculate total
+    const total = cartResult.rows.reduce((sum, item) => {
+      return sum + (parseFloat(item.price) * item.quantity);
+    }, 0);
+
+    // Create order
+    const orderResult = await db.query(
+      'INSERT INTO orders (user_id, order_placed, total_price) VALUES ($1, $2, $3) RETURNING *',
+      [req.user.id, true, total]
+    );
+
+    const order = orderResult.rows[0];
+
+    // Create order items
+    for (const item of cartResult.rows) {
+      const subtotal = parseFloat(item.price) * item.quantity;
+      await db.query(
+        'INSERT INTO order_items (product_id, order_id, quantity, subtotal) VALUES ($1, $2, $3, $4)',
+        [item.product_id, order.id, item.quantity, subtotal]
+      );
+    }
+
+    // Clear cart
+    await db.query('DELETE FROM cart_items WHERE user_id = $1', [req.user.id]);
+
+    res.status(201).json({ 
+      message: 'Order placed successfully', 
+      order: {
+        id: order.id,
+        userId: order.user_id,
+        total: parseFloat(order.total_price),
+        status: 'completed',
+        createdAt: order.date_ordered
+      }
+    });
+  } catch (error) {
+    console.error('Order creation error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-
-  const total = userCart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  
-  const order = {
-    id: orders.length + 1,
-    userId: req.user.id,
-    items: [...userCart],
-    total,
-    status: 'pending',
-    createdAt: new Date()
-  };
-
-  orders.push(order);
-  carts[req.user.id] = []; // Clear cart after order
-
-  res.status(201).json({ message: 'Order placed successfully', order });
 });
 
-app.get('/api/orders', authenticateToken, (req, res) => {
-  const userOrders = orders.filter(order => order.userId === req.user.id);
-  res.json(userOrders);
+app.get('/api/orders', authenticateToken, async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Get user's orders
+    const ordersResult = await db.query(`
+      SELECT o.*, 
+             oi.product_id, oi.quantity, oi.subtotal,
+             p.name, p.type, p.price, p.image, p.description
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      WHERE o.user_id = $1 AND o.order_placed = true
+      ORDER BY o.date_ordered DESC
+    `, [req.user.id]);
+
+    // Group by order
+    const ordersMap = {};
+    ordersResult.rows.forEach(row => {
+      if (!ordersMap[row.id]) {
+        ordersMap[row.id] = {
+          id: row.id,
+          userId: row.user_id,
+          total: parseFloat(row.total_price),
+          status: 'completed',
+          createdAt: row.date_ordered,
+          items: []
+        };
+      }
+
+      if (row.product_id) {
+        ordersMap[row.id].items.push({
+          productId: row.product_id,
+          quantity: row.quantity,
+          product: {
+            id: row.product_id,
+            name: row.name,
+            type: row.type,
+            price: parseFloat(row.price),
+            image: row.image,
+            description: row.description
+          }
+        });
+      }
+    });
+
+    const orders = Object.values(ordersMap);
+    res.json(orders);
+  } catch (error) {
+    console.error('Orders fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // User Profile Routes
