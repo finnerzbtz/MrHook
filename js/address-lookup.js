@@ -1,14 +1,16 @@
-// Address lookup utility for UK addresses using comprehensive address API
 class AddressLookup {
   // Using the free UK address API - comprehensive address data
   static apiUrl = 'https://api.postcodes.io';
   static addressApiUrl = 'https://api.getaddress.io/find';
+  static _currentAddresses = null;
 
   // Find addresses for a given postcode
   static async findAddress() {
     const postcodeInput = document.getElementById('postcode');
     const addressSelect = document.getElementById('addressSelect');
     const lookupBtn = document.querySelector('.postcode-lookup');
+
+    if (!postcodeInput || !lookupBtn) return;
 
     const postcode = postcodeInput.value.trim().toUpperCase();
 
@@ -31,211 +33,165 @@ class AddressLookup {
       // Try multiple address APIs for comprehensive coverage
       let addresses = await this.getAddressesFromAPI(postcode);
 
+      if (!addresses || addresses.length === 0) {
+        addresses = await this.getAddressesFromFallback(postcode);
+      }
+
       if (addresses && addresses.length > 0) {
-        this.displayAddressOptions(addresses, postcode);
-        this.prefillPostcodeInfo(postcode);
+        this._currentAddresses = addresses;
+        this.populateAddressSelect(addresses);
+        Toast.show(`Found ${addresses.length} addresses`);
       } else {
-        // Fallback to basic postcode lookup
-        const basicData = await this.getBasicPostcodeData(postcode);
-        if (basicData) {
-          this.prefillBasicInfo(basicData);
-          this.showManualEntry();
-        } else {
-          Toast.show('Postcode not found. Please enter address manually.', 'error');
-          this.showManualEntry();
-        }
+        Toast.show('No addresses found for this postcode', 'warning');
+        this.clearAddressSelect();
       }
     } catch (error) {
       console.error('Address lookup error:', error);
-      Toast.show('Unable to lookup address. Please enter manually.', 'error');
-      this.showManualEntry();
+      Toast.show('Unable to lookup addresses. Please enter manually.', 'warning');
+      this.clearAddressSelect();
     } finally {
-      // Reset button
+      // Reset button state
       lookupBtn.innerHTML = '<i class="fas fa-search"></i> Find';
       lookupBtn.disabled = false;
     }
   }
 
-  // Get addresses from comprehensive API
+  // Get addresses from primary API
   static async getAddressesFromAPI(postcode) {
     try {
-      // Using free UK address lookup service
-      const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
+      const response = await fetch(`${this.apiUrl}/postcodes/${postcode}`);
       const data = await response.json();
 
       if (data.status === 200 && data.result) {
-        // Generate sample addresses based on the area
-        return this.generateSampleAddresses(postcode, data.result);
+        // Format the response into standardized addresses
+        return [{
+          line1: `${data.result.primary_care_trust}`,
+          line2: '',
+          city: data.result.admin_district,
+          postcode: data.result.postcode,
+          county: data.result.admin_county || data.result.region
+        }];
       }
-      return null;
     } catch (error) {
-      console.error('Address API error:', error);
-      return null;
+      console.warn('Primary API failed:', error);
     }
+    return null;
   }
 
-  // Generate realistic sample addresses for the postcode
-  static generateSampleAddresses(postcode, postcodeData) {
-    const streetNames = [
-      'High Street', 'Church Street', 'Victoria Road', 'King Street', 'Queen Street',
-      'Mill Lane', 'Oak Avenue', 'Park Road', 'Station Road', 'The Green',
-      'Manor Road', 'Elm Grove', 'Cedar Close', 'Birch Way', 'Ash Court'
-    ];
+  // Fallback address lookup
+  static async getAddressesFromFallback(postcode) {
+    // Create sample addresses based on postcode for demo purposes
+    const areas = {
+      'L': 'Liverpool',
+      'M': 'Manchester', 
+      'B': 'Birmingham',
+      'E': 'London East',
+      'W': 'London West',
+      'N': 'London North',
+      'S': 'London South'
+    };
 
-    const houseTypes = [
-      { type: 'number', range: [1, 150] },
-      { type: 'flat', range: [1, 20] },
-      { type: 'name', names: ['Rose Cottage', 'The Old Rectory', 'Hillside House', 'Garden Flat', 'Corner House'] }
-    ];
+    const firstChar = postcode.charAt(0).toUpperCase();
+    const cityName = areas[firstChar] || 'Unknown';
 
-    const addresses = [];
-
-    // Generate 5-8 sample addresses
-    const numAddresses = Math.floor(Math.random() * 4) + 5;
-
-    for (let i = 0; i < numAddresses; i++) {
-      const street = streetNames[Math.floor(Math.random() * streetNames.length)];
-      const houseType = houseTypes[Math.floor(Math.random() * houseTypes.length)];
-
-      let addressLine1 = '';
-
-      if (houseType.type === 'number') {
-        const houseNum = Math.floor(Math.random() * (houseType.range[1] - houseType.range[0])) + houseType.range[0];
-        addressLine1 = `${houseNum} ${street}`;
-      } else if (houseType.type === 'flat') {
-        const flatNum = Math.floor(Math.random() * houseType.range[1]) + 1;
-        const houseNum = Math.floor(Math.random() * 50) + 1;
-        addressLine1 = `Flat ${flatNum}, ${houseNum} ${street}`;
-      } else {
-        addressLine1 = houseType.names[Math.floor(Math.random() * houseType.names.length)];
-      }
-
-      addresses.push({
-        line1: addressLine1,
+    return [
+      {
+        line1: `1 High Street`,
         line2: '',
-        city: postcodeData.admin_district || 'Unknown',
-        county: postcodeData.admin_county || '',
+        city: cityName,
         postcode: postcode,
-        fullAddress: `${addressLine1}, ${postcodeData.admin_district}, ${postcode}`
-      });
-    }
-
-    return addresses;
-  }
-
-  // Get basic postcode data fallback
-  static async getBasicPostcodeData(postcode) {
-    try {
-      const response = await fetch(`${this.apiUrl}/postcodes/${encodeURIComponent(postcode)}`);
-      const data = await response.json();
-
-      if (data.status === 200 && data.result) {
-        return data.result;
+        county: firstChar === 'L' ? 'Merseyside' : firstChar === 'M' ? 'Greater Manchester' : firstChar === 'B' ? 'West Midlands' : 'Greater London'
+      },
+      {
+        line1: `23 Main Road`,
+        line2: '',
+        city: cityName,
+        postcode: postcode,
+        county: firstChar === 'L' ? 'Merseyside' : firstChar === 'M' ? 'Greater Manchester' : firstChar === 'B' ? 'West Midlands' : 'Greater London'
       }
-      return null;
-    } catch (error) {
-      return null;
-    }
+    ];
   }
 
-  // Validate UK postcode format
-  static isValidPostcode(postcode) {
-    const postcodeRegex = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
-    return postcodeRegex.test(postcode.trim());
-  }
-
-  // Display comprehensive address options
-  static displayAddressOptions(addresses, postcode) {
+  // Populate address select dropdown
+  static populateAddressSelect(addresses) {
     const addressSelect = document.getElementById('addressSelect');
-    if (addressSelect && addresses) {
-      addressSelect.innerHTML = `
-        <option value="">Select an address...</option>
-        ${addresses.map((address, index) => `
-          <option value="${index}">${address.fullAddress}</option>
-        `).join('')}
-        <option value="manual">Enter address manually</option>
-      `;
-      addressSelect.style.display = 'block';
+    if (!addressSelect) return;
 
-      // Store addresses for later use
-      this._currentAddresses = addresses;
+    // Clear existing options
+    addressSelect.innerHTML = '<option value="">Please select an address...</option>';
 
-      // Add change listener
-      addressSelect.onchange = () => this.fillSelectedAddress();
-    }
+    // Add address options
+    addresses.forEach((address, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = this.formatAddressForDropdown(address);
+      addressSelect.appendChild(option);
+    });
+
+    // Show the select
+    addressSelect.style.display = 'block';
   }
 
-  // Fill selected address into form
-  static fillSelectedAddress() {
-    const addressSelect = document.getElementById('addressSelect');
-    const selectedIndex = addressSelect.value;
+  // Format address for dropdown display
+  static formatAddressForDropdown(address) {
+    const parts = [];
+    if (address.line1) parts.push(address.line1);
+    if (address.line2) parts.push(address.line2);
+    if (address.city) parts.push(address.city);
+    return parts.join(', ');
+  }
 
-    if (selectedIndex === 'manual') {
-      this.showManualEntry();
+  // Fill address fields when selection is made
+  static fillAddress() {
+    const addressSelect = document.getElementById('addressSelect');
+    const selectedIndex = parseInt(addressSelect.value);
+
+    if (isNaN(selectedIndex) || !this._currentAddresses || !this._currentAddresses[selectedIndex]) {
       return;
     }
 
-    if (selectedIndex === '') {
-      this.clearAddressFields();
-      return;
-    }
+    const selectedAddress = this._currentAddresses[selectedIndex];
 
-    if (this._currentAddresses && this._currentAddresses[selectedIndex]) {
-      const address = this._currentAddresses[selectedIndex];
+    // Fill the form fields
+    const fields = {
+      'addressLine1': selectedAddress.line1 || '',
+      'addressLine2': selectedAddress.line2 || '',
+      'city': selectedAddress.city || '',
+      'county': selectedAddress.county || ''
+    };
 
-      // Fill in the address fields
-      const addressLine1 = document.getElementById('addressLine1');
-      const addressLine2 = document.getElementById('addressLine2');
-      const city = document.getElementById('city');
-      const county = document.getElementById('county');
+    Object.entries(fields).forEach(([fieldId, value]) => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.value = value;
+      }
+    });
 
-      if (addressLine1) addressLine1.value = address.line1;
-      if (addressLine2) addressLine2.value = address.line2;
-      if (city) city.value = address.city;
-      if (county) county.value = address.county;
+    Toast.show('Address filled automatically');
+  }
 
-      // Show the address fields
-      this.showManualEntry();
+  // Clear address select
+  static clearAddressSelect() {
+    const addressSelect = document.getElementById('addressSelect');
+    if (addressSelect) {
+      addressSelect.style.display = 'none';
+      addressSelect.innerHTML = '';
     }
   }
 
   // Clear address fields
   static clearAddressFields() {
-    const fields = ['addressLine1', 'addressLine2', 'city', 'county'];
-    fields.forEach(fieldId => {
-      const field = document.getElementById(fieldId);
+    const fieldIds = ['addressLine1', 'addressLine2', 'city', 'county'];
+    fieldIds.forEach(id => {
+      const field = document.getElementById(id);
       if (field) field.value = '';
     });
   }
 
-  // Prefill basic info from postcode
-  static prefillBasicInfo(result) {
-    if (result.admin_district) {
-      const cityField = document.getElementById('city');
-      if (cityField && !cityField.value) cityField.value = result.admin_district;
-    }
-
-    if (result.admin_county) {
-      const countyField = document.getElementById('county');
-      if (countyField && !countyField.value) countyField.value = result.admin_county;
-    }
-  }
-
-  // Prefill postcode info
-  static prefillPostcodeInfo(postcode) {
-    const postcodeField = document.getElementById('postcode');
-    if (postcodeField) postcodeField.value = postcode;
-  }
-
-  // Show manual entry fields
-  static showManualEntry() {
-    const addressFields = document.querySelectorAll('#addressLine1, #addressLine2, #city, #county');
-    addressFields.forEach(field => {
-      if (field) {
-        field.style.display = 'block';
-        field.parentElement.style.display = 'block';
-      }
-    });
+  // Validate UK postcode format
+  static isValidPostcode(postcode) {
+    const ukPostcodeRegex = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
+    return ukPostcodeRegex.test(postcode);
   }
 
   // Validate complete address for registration
@@ -268,25 +224,6 @@ class AddressLookup {
     }
     this._currentAddresses = null;
     this.clearAddressFields();
-  }
-
-  // Lookup postcode
-  static async lookupPostcode() {
-    const postcodeInput = document.getElementById('postcode');
-    const lookupBtn = document.getElementById('postcodeBtn');
-
-    if (!postcodeInput || !lookupBtn) return;
-
-    const postcode = postcodeInput.value.trim();
-
-    if (!postcode) {
-      Toast.show('Please enter a postcode', 'error');
-      return;
-    }
-
-    // Show loading state
-    lookupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-    lookupBtn.disabled = true;
   }
 }
 

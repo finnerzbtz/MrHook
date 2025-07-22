@@ -9,20 +9,20 @@ const App = {
     this.updateAuthUI();
     this.showPage('home');
     initUtils();
-    
+
     // Initialize products
     ProductsComponent.render();
-    
+
     // Initialize video hover functionality
     VideoHoverComponent.init();
-    
+
     console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
   },
 
   // Initialize loading screen
   initLoadingScreen() {
     const loadingScreen = document.getElementById('loadingScreen');
-    
+
     // Hide loading screen after a short delay
     setTimeout(() => {
       loadingScreen.classList.add('fade-out');
@@ -37,7 +37,7 @@ const App = {
     // Mobile menu toggle
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
-    
+
     mobileMenuBtn.addEventListener('click', () => {
       mobileMenuBtn.classList.toggle('active');
       mobileMenu.classList.toggle('active');
@@ -49,7 +49,7 @@ const App = {
         e.preventDefault();
         const page = e.target.getAttribute('data-page');
         this.showPage(page);
-        
+
         // Close mobile menu if open
         mobileMenuBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
@@ -125,11 +125,11 @@ const App = {
     // Auth forms
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
-    
+
     if (loginForm) {
       loginForm.addEventListener('submit', AuthComponent.handleLogin);
     }
-    
+
     if (signupForm) {
       signupForm.addEventListener('submit', AuthComponent.handleSignup);
     }
@@ -148,20 +148,20 @@ const App = {
     window.addEventListener('scroll', throttle(() => {
       const header = document.getElementById('mainHeader');
       const currentScrollY = window.scrollY;
-      
+
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         header.style.transform = 'translateY(-100%)';
       } else {
         header.style.transform = 'translateY(0)';
       }
-      
+
       // Add shadow when scrolled
       if (currentScrollY > 10) {
         header.classList.add('scrolled');
       } else {
         header.classList.remove('scrolled');
       }
-      
+
       lastScrollY = currentScrollY;
     }, 100));
   },
@@ -176,7 +176,7 @@ const App = {
     // Hide categories and products sections for auth pages
     const categoriesSection = document.getElementById('categoriesSection');
     const productsSection = document.getElementById('productsSection');
-    
+
     if (pageName === 'home') {
       categoriesSection.style.display = 'block';
       productsSection.style.display = 'block';
@@ -184,12 +184,12 @@ const App = {
     } else {
       categoriesSection.style.display = 'none';
       productsSection.style.display = 'none';
-      
+
       // Show specific page
       const targetPage = document.getElementById(`${pageName}Page`);
       if (targetPage) {
         targetPage.classList.add('active', 'fade-in');
-        
+
         // Render page content
         switch (pageName) {
           case 'profile':
@@ -211,7 +211,7 @@ const App = {
     });
 
     this.currentPage = pageName;
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
@@ -309,13 +309,25 @@ window.addEventListener('unhandledrejection', (event) => {
   Toast.show('An unexpected error occurred.', 'error');
 });
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize app
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
+
   try {
-    App.init();
+    // Ensure API is available
+    if (typeof API === 'undefined' && typeof ApiService !== 'undefined') {
+      window.API = new ApiService();
+    }
+
+    // Initialize components
+    setTimeout(() => {
+      hideLoadingScreen();
+      App.init();
+    }, 1500);
   } catch (error) {
     console.error('Failed to initialize app:', error);
-    Toast.show('Failed to load the application. Please refresh the page.', 'error');
+    hideLoadingScreen();
+    App.init();
   }
 });
 
@@ -325,7 +337,7 @@ style.textContent = `
   .header.scrolled {
     box-shadow: var(--shadow-lg);
   }
-  
+
   .no-products,
   .empty-basket,
   .no-orders {
@@ -333,7 +345,7 @@ style.textContent = `
     padding: var(--space-16);
     color: var(--gray-500);
   }
-  
+
   .order-item {
     background: var(--white);
     padding: var(--space-4);
@@ -341,7 +353,7 @@ style.textContent = `
     box-shadow: var(--shadow-sm);
     margin-bottom: var(--space-4);
   }
-  
+
   .order-header {
     display: flex;
     justify-content: space-between;
@@ -350,43 +362,43 @@ style.textContent = `
     padding-bottom: var(--space-2);
     border-bottom: 1px solid var(--gray-200);
   }
-  
+
   .order-product {
     display: flex;
     justify-content: space-between;
     padding: var(--space-2) 0;
     border-bottom: 1px solid var(--gray-100);
   }
-  
+
   .order-total {
     text-align: right;
     margin-top: var(--space-3);
     font-size: var(--font-size-lg);
     color: var(--primary-color);
   }
-  
+
   .profile-info-item {
     display: flex;
     justify-content: space-between;
     padding: var(--space-3) 0;
     border-bottom: 1px solid var(--gray-100);
   }
-  
+
   .profile-info-item label {
     font-weight: 600;
     color: var(--gray-700);
   }
-  
+
   .quantity-display {
     padding: var(--space-2) var(--space-4);
     font-weight: 600;
     color: var(--primary-color);
   }
-  
+
   .basket-item-subtotal {
     font-weight: 600;
     color: var(--secondary-color);
     font-size: var(--font-size-lg);
   }
 `;
-document.head.appendChild(style); 
+document.head.appendChild(style);
