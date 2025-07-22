@@ -443,11 +443,24 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       return sum + (parseFloat(item.price) * item.quantity);
     }, 0);
 
-    // Create order
-    const orderResult = await db.query(
-      'INSERT INTO orders (user_id, order_placed, total_price) VALUES ($1, $2, $3) RETURNING *',
-      [req.user.id, true, total]
-    );
+    // Create order - check if order_placed column exists, if not use default structure
+    let orderResult;
+    try {
+      orderResult = await db.query(
+        'INSERT INTO orders (user_id, order_placed, total_price) VALUES ($1, $2, $3) RETURNING *',
+        [req.user.id, true, total]
+      );
+    } catch (error) {
+      if (error.code === '42703') {
+        // Column doesn't exist, try without order_placed
+        orderResult = await db.query(
+          'INSERT INTO orders (user_id, total_price) VALUES ($1, $2) RETURNING *',
+          [req.user.id, total]
+        );
+      } else {
+        throw error;
+      }
+    }
 
     const order = orderResult.rows[0];
 
