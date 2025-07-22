@@ -246,10 +246,29 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
       return res.status(500).json({ message: 'Database not available' });
     }
 
-    // Check if product exists
+    // Check if product exists and has sufficient stock
     const productResult = await db.query('SELECT * FROM products WHERE id = $1', [productId]);
     if (productResult.rows.length === 0) {
       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const product = productResult.rows[0];
+    
+    // Check current cart quantity
+    const currentCartResult = await db.query(
+      'SELECT quantity FROM cart_items WHERE user_id = $1 AND product_id = $2',
+      [req.user.id, productId]
+    );
+    
+    const currentCartQuantity = currentCartResult.rows.length > 0 ? currentCartResult.rows[0].quantity : 0;
+    const totalRequestedQuantity = currentCartQuantity + quantity;
+
+    if (totalRequestedQuantity > product.stock) {
+      return res.status(400).json({ 
+        message: `Insufficient stock. Only ${product.stock} items available, ${currentCartQuantity} already in cart.`,
+        availableStock: product.stock,
+        currentCartQuantity: currentCartQuantity
+      });
     }
 
     // Check if item already in cart
@@ -317,6 +336,20 @@ app.put('/api/cart/update', authenticateToken, async (req, res) => {
         [req.user.id, productId]
       );
     } else {
+      // Check stock availability
+      const productResult = await db.query('SELECT stock FROM products WHERE id = $1', [productId]);
+      if (productResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      const availableStock = productResult.rows[0].stock;
+      if (quantity > availableStock) {
+        return res.status(400).json({ 
+          message: `Insufficient stock. Only ${availableStock} items available.`,
+          availableStock: availableStock
+        });
+      }
+
       // Update quantity
       const result = await db.query(
         'UPDATE cart_items SET quantity = $1 WHERE user_id = $2 AND product_id = $3',
@@ -451,12 +484,34 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
     const order = orderResult.rows[0];
 
-    // Create order items
+    // Create order items and update stock
     for (const item of cartResult.rows) {
+      // Check stock availability before processing
+      const stockCheck = await db.query('SELECT stock FROM products WHERE id = $1', [item.product_id]);
+      const availableStock = stockCheck.rows[0].stock;
+      
+      if (item.quantity > availableStock) {
+        return res.status(400).json({ 
+          message: `Insufficient stock for ${item.name}. Only ${availableStock} items available.`,
+          productId: item.product_id,
+          productName: item.name,
+          requestedQuantity: item.quantity,
+          availableStock: availableStock
+        });
+      }
+
       const subtotal = parseFloat(item.price) * item.quantity;
+      
+      // Create order item
       await db.query(
         'INSERT INTO order_items (product_id, order_id, quantity, subtotal) VALUES ($1, $2, $3, $4)',
         [item.product_id, order.id, item.quantity, subtotal]
+      );
+      
+      // Reduce stock
+      await db.query(
+        'UPDATE products SET stock = stock - $1 WHERE id = $2',
+        [item.quantity, item.product_id]
       );
     }
 
@@ -531,6 +586,108 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     res.json(orders);
   } catch (error) {
     console.error('Orders fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Stock Management Routes
+app.get('/api/stock/:productId', async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    const result = await db.query('SELECT id, name, stock FROM products WHERE id = $1', [parseInt(req.params.productId)]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const product = result.rows[0];
+    res.json({
+      productId: product.id,
+      productName: product.name,
+      stock: product.stock,
+      inStock: product.stock > 0
+    });
+  } catch (error) {
+    console.error('Stock check error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/stock', async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    const result = await db.query('SELECT id, name, stock FROM products ORDER BY name');
+    const stockData = result.rows.map(product => ({
+      productId: product.id,
+      productName: product.name,
+      stock: product.stock,
+      inStock: product.stock > 0
+    }));
+
+    res.json(stockData);
+  } catch (error) {
+    console.error('Stock list error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/stock/check', async (req, res) => {
+  try {
+    const { items } = req.body; // Array of {productId, quantity}
+
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Items array is required' });
+    }
+
+    const stockChecks = [];
+    let allInStock = true;
+
+    for (const item of items) {
+      const result = await db.query('SELECT id, name, stock FROM products WHERE id = $1', [item.productId]);
+      
+      if (result.rows.length === 0) {
+        stockChecks.push({
+          productId: item.productId,
+          requestedQuantity: item.quantity,
+          availableStock: 0,
+          inStock: false,
+          message: 'Product not found'
+        });
+        allInStock = false;
+      } else {
+        const product = result.rows[0];
+        const inStock = product.stock >= item.quantity;
+        
+        stockChecks.push({
+          productId: product.id,
+          productName: product.name,
+          requestedQuantity: item.quantity,
+          availableStock: product.stock,
+          inStock: inStock,
+          message: inStock ? 'In stock' : `Only ${product.stock} available`
+        });
+
+        if (!inStock) {
+          allInStock = false;
+        }
+      }
+    }
+
+    res.json({
+      allInStock: allInStock,
+      items: stockChecks
+    });
+  } catch (error) {
+    console.error('Bulk stock check error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

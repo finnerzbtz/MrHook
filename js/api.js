@@ -159,6 +159,22 @@ class ApiService {
       body: JSON.stringify(profileData)
     });
   }
+
+  // Stock Management
+  async getStock(productId) {
+    return await this.request(`/stock/${productId}`);
+  }
+
+  async getAllStock() {
+    return await this.request('/stock');
+  }
+
+  async checkStock(items) {
+    return await this.request('/stock/check', {
+      method: 'POST',
+      body: JSON.stringify({ items })
+    });
+  }
 }
 
 // Create and expose global API instance
