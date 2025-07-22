@@ -70,7 +70,7 @@ const ProductsComponent = {
             <p class="product-detail-category">${formatCategory(product.category)}</p>
             <div class="product-detail-price">${formatPrice(product.price)}</div>
             <p class="product-detail-description">${escapeHtml(product.description)}</p>
-            
+
             <div class="quantity-selector">
               <label>Quantity:</label>
               <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
@@ -81,7 +81,7 @@ const ProductsComponent = {
                 <i class="fas fa-plus"></i>
               </button>
             </div>
-            
+
             <div class="product-actions">
               <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
                 <i class="fas fa-shopping-basket"></i>
@@ -245,10 +245,10 @@ const AuthComponent = {
 
     try {
       const response = await API.login(email, password);
-      
+
       // Store user data locally for Auth.getCurrentUser()
       localStorage.setItem('currentUser', JSON.stringify(response.user));
-      
+
       const userName = response.user.firstName || response.user.first_name || 'User';
       Toast.show(`Welcome back, ${userName}!`);
       App.updateAuthUI();
@@ -298,9 +298,9 @@ const AuthComponent = {
         email, 
         password 
       };
-      
+
       const response = await API.register(userData);
-      
+
       Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
@@ -390,7 +390,7 @@ const ProfileComponent = {
       const freshUserData = await API.getProfile();
       // Update local storage with complete user data
       localStorage.setItem('currentUser', JSON.stringify(freshUserData.user));
-      
+
       const completeUser = freshUserData.user;
 
       if (this.isEditing) {
@@ -478,7 +478,7 @@ const ProfileComponent = {
           <label for="editHomeAddress">Home Address</label>
           <textarea id="editHomeAddress" required class="form-textarea">${escapeHtml(homeAddress)}</textarea>
         </div>
-        
+
         <div class="profile-actions">
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i>
@@ -690,40 +690,33 @@ const BasketComponent = {
     this.render();
   },
 
-  // Checkout process
-  checkout() {
-    const cart = Cart.get();
+  // Place order
+  async placeOrder() {
+    const user = Auth.getCurrentUser();
+    if (!user) {
+      Toast.show('Please login to place an order', 'error');
+      return;
+    }
+
+    const cart = Cart.getItems();
     if (cart.length === 0) {
       Toast.show('Your basket is empty', 'error');
       return;
     }
 
-    // Simulate order processing
-    const total = Cart.getTotal();
-    const user = Auth.getCurrentUser();
+    try {
+      // Create order via API
+      const response = await API.createOrder();
 
-    // Create new order
-    const newOrder = {
-      id: mockOrders.length + 1,
-      userId: user.id,
-      items: cart.map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          price: product.price
-        };
-      }),
-      total: total,
-      date: new Date().toISOString().split('T')[0],
-      status: 'completed'
-    };
+      // Clear cart after successful order
+      Cart.clear();
 
-    mockOrders.push(newOrder);
-    Cart.clear();
-
-    Toast.show('Order placed successfully! Thank you for your purchase.');
-    App.showPage('home');
+      Toast.show('Order placed successfully! Thank you for your purchase.');
+      App.showPage('home');
+    } catch (error) {
+      console.error('Order placement failed:', error);
+      Toast.show('Failed to place order. Please try again.', 'error');
+    }
   }
 };
 
