@@ -180,8 +180,7 @@ a:hover {
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
+  font-size: 2rem;
   color: var(--secondary-color);
   transition: all var(--transition-base);
 }
