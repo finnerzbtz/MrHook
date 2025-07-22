@@ -1,0 +1,126 @@
+here is a list of the required frontend features for the project, categorized by design, functionality, and content.
+
+Design Features
+
+Logo: The Replit logo should be used. 
+
+
+Main Font: The primary font for the website is Arial. 
+
+Color Palette:
+
+
+Main Color: Dark Blue (#324380) 
+
+
+Highlight Color: Orange (#FF5A08) 
+
+
+Responsiveness: All pages, including the Site Header, Login/Signup page, Products page, Profile page, and Basket page, must be responsive for both desktop and mobile devices. 
+
+
+
+
+
+Layout:
+
+
+Site Header: A reusable header should be present on all pages. The company logo should be on the left. 
+
+
+
+
+Login/Signup: The project requires a dedicated page for login and signup, not pop-ups. 
+
+Functionality Features
+User Account Management:
+
+Users must create an account to add items to their basket. 
+
+The signup process should collect the user's first name, last name, address, and email. 
+
+Users must be able to log in to their accounts. 
+
+After logging in, users should be redirected to the main products (Index) page. 
+
+A password reset option must be available. 
+
+Site Navigation:
+
+
+Logged-in users: A "burger menu" in the header should display links for "Products", "Profile", "Basket", and "Logout". 
+
+
+Logged-out users: The header should show links for "Products" and "Login". 
+
+Product Browse and Filtering:
+
+The main page should list all products. 
+
+Users should be able to filter the product list by name, product type, and price range. 
+
+Clicking a product should display its detailed view. 
+
+A "Back to search" button should return the user to the full product list. 
+
+Shopping Basket:
+
+An "Add to basket" button with a quantity selector should be available on the product details view. 
+
+On the Basket page, users can review their current order. 
+
+
+
+Users must be able to remove items and modify quantities in the basket. 
+
+
+Price displays must update automatically when the basket is modified. 
+
+Ordering Process:
+
+A "Place Order" button finalizes the purchase. 
+
+Once an order is placed, it is marked as "completed" and cannot be changed. 
+
+
+Users should receive on-screen feedback confirming the order was placed before being redirected to the Index page. 
+
+A new, empty order should be created for the user after they complete a purchase. 
+
+Users can have multiple orders. 
+
+User Profile Management:
+
+The Profile page should allow users to view and edit their name, email, and home address. 
+
+Any change to a user's email address must be verified via an email confirmation. 
+
+Content Features
+Site Header:
+
+Displays the company logo. 
+
+Shows navigation links tailored to the user's login status ("Products", "Profile", "Basket", "Logout" or "Products", "Login"). 
+
+Products Page (Index):
+
+
+Product List: Each item in the list must display its image, name, type, and price. 
+
+
+Product Details: The detailed view for a selected product must show its image, name, description, type, and price. 
+
+Profile Page:
+
+
+Personal Details: Displays the user's name, email, and home address. 
+
+
+Order History: Shows a list of all successfully placed orders, with the most recent appearing first. Each order in the history must show a full list of the products bought, their quantities, subtotals, and the total price of the order. 
+
+
+Basket Page:
+
+Displays a list of all items in the user's current order. 
+
+Shows the subtotal for each item and the total price for the entire order. 
