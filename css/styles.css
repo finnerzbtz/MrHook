@@ -154,18 +154,12 @@ a:hover {
 
 /* Header */
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   background: var(--white);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
   z-index: var(--z-sticky);
   transition: all var(--transition-base);
-}
-
-.header.at-top {
-  transform: translateY(0) !important;
 }
 
 .header-content {
