@@ -500,10 +500,10 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
       const subtotal = parseFloat(item.price) * item.quantity;
 
-      // Create order item
+      // Create order item with price and subtotal
       await db.query(
-        'INSERT INTO order_items (product_id, order_id, quantity, subtotal) VALUES ($1, $2, $3, $4)',
-        [item.product_id, order.id, item.quantity, subtotal]
+        'INSERT INTO order_items (product_id, order_id, quantity, price, subtotal) VALUES ($1, $2, $3, $4, $5)',
+        [item.product_id, order.id, item.quantity, parseFloat(item.price), subtotal]
       );
 
       // Reduce stock

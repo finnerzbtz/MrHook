@@ -116,6 +116,7 @@ class Database {
           product_id INTEGER REFERENCES products(id),
           order_id INTEGER REFERENCES orders(id),
           quantity INTEGER NOT NULL,
+          price DECIMAL(10,2),
           subtotal DECIMAL(10,2)
         )
       `);
@@ -154,6 +155,16 @@ class Database {
         console.log('✅ Ensured subtotal column exists in order_items table');
       } catch (error) {
         console.log('ℹ️ Subtotal column:', error.message);
+      }
+
+      // Ensure price exists in order_items table (API inserts price)
+      try {
+        await this.pool.query(`
+          ALTER TABLE order_items ADD COLUMN IF NOT EXISTS price DECIMAL(10,2)
+        `);
+        console.log('✅ Ensured price column exists in order_items table');
+      } catch (error) {
+        console.log('ℹ️ Price column:', error.message);
       }
 
       // Ensure created_at exists in orders table (for consistency)
