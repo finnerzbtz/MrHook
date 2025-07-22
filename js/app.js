@@ -186,23 +186,23 @@ const App = {
 
     function updateHeader() {
       const currentScrollY = window.scrollY;
-      const header = document.querySelector('.header');
+      const headerElement = document.querySelector('.header');
 
-      if (!header) return;
+      if (!headerElement) return;
 
       // Always show header when at the top of the page or very close to it
       if (currentScrollY <= 50) {
-        header.style.transform = 'translateY(0)';
-        header.classList.add('at-top');
+        headerElement.style.transform = 'translateY(0)';
+        headerElement.classList.add('at-top');
       } else {
-        header.classList.remove('at-top');
+        headerElement.classList.remove('at-top');
 
         if (currentScrollY > lastScrollY && currentScrollY > 100) {
           // Hide when scrolling down and past 100px
-          header.style.transform = 'translateY(-100%)';
+          headerElement.style.transform = 'translateY(-100%)';
         } else if (currentScrollY < lastScrollY) {
           // Show when scrolling up
-          header.style.transform = 'translateY(0)';
+          headerElement.style.transform = 'translateY(0)';
         }
       }
 
