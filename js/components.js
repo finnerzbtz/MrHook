@@ -126,17 +126,50 @@ const ProductsComponent = {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
 
-    grid.innerHTML = `
-      <div class="error-products">
-        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
-        <h3>Oops! Something went wrong</h3>
-        <p>${message}</p>
-        <button class="btn btn-primary" onclick="ProductsComponent.loadProducts()">
-          <i class="fas fa-redo"></i>
-          Try Again
-        </button>
-      </div>
-    `;
+    // Clear existing content
+    grid.innerHTML = '';
+
+    // Create error container
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-products';
+
+    // Create icon
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-exclamation-triangle';
+    icon.style.cssText = 'font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;';
+
+    // Create heading
+    const heading = document.createElement('h3');
+    heading.textContent = 'Oops! Something went wrong';
+
+    // Create message paragraph
+    const messageP = document.createElement('p');
+    messageP.textContent = message; // Safe text content
+
+    // Create button
+    const button = document.createElement('button');
+    button.className = 'btn btn-primary';
+    button.onclick = () => ProductsComponent.loadProducts();
+
+    // Create button icon
+    const buttonIcon = document.createElement('i');
+    buttonIcon.className = 'fas fa-redo';
+
+    // Create button text
+    const buttonText = document.createTextNode(' Try Again');
+
+    // Assemble button
+    button.appendChild(buttonIcon);
+    button.appendChild(buttonText);
+
+    // Assemble error div
+    errorDiv.appendChild(icon);
+    errorDiv.appendChild(heading);
+    errorDiv.appendChild(messageP);
+    errorDiv.appendChild(button);
+
+    // Add to grid
+    grid.appendChild(errorDiv);
   },
 
   // Render products grid
@@ -236,51 +269,151 @@ const ProductsComponent = {
         console.log('Cleared any blocking inline styles');
       }
 
-      // Populate product detail page 
-      container.innerHTML = `
-        <div class="product-detail-layout">
-          <div class="product-detail-image-section">
-            <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
-          </div>
-          
-          <div class="product-detail-info-section">
-            <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
-            <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
-            <div class="product-detail-price">${formatPrice(product.price)}</div>
-            
-            <div class="product-detail-description">
-              <h3>Description</h3>
-              <p>${escapeHtml(product.description)}</p>
-            </div>
-            
-            <div class="product-detail-actions">
-              <div class="quantity-selector">
-                <label for="productQuantity">Quantity:</label>
-                <div class="quantity-controls">
-                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
-                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </div>
-              
-              <div class="product-actions">
-                <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
-                  <i class="fas fa-shopping-basket"></i>
-                  Add to Basket
-                </button>
-                <button class="btn btn-outline" onclick="App.showPage('home')">
-                  <i class="fas fa-arrow-left"></i>
-                  Back to search
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      // Clear existing content
+      container.innerHTML = '';
+
+      // Create main layout
+      const layoutDiv = document.createElement('div');
+      layoutDiv.className = 'product-detail-layout';
+
+      // Image section
+      const imageSection = document.createElement('div');
+      imageSection.className = 'product-detail-image-section';
+      
+      const img = document.createElement('img');
+      img.src = product.image;
+      img.alt = product.name;
+      img.className = 'product-detail-image';
+      imageSection.appendChild(img);
+
+      // Info section
+      const infoSection = document.createElement('div');
+      infoSection.className = 'product-detail-info-section';
+
+      // Product name
+      const nameH1 = document.createElement('h1');
+      nameH1.className = 'product-detail-name';
+      nameH1.textContent = product.name;
+
+      // Product category
+      const categoryP = document.createElement('p');
+      categoryP.className = 'product-detail-category';
+      categoryP.textContent = formatCategory(product.category || product.type);
+
+      // Product price
+      const priceDiv = document.createElement('div');
+      priceDiv.className = 'product-detail-price';
+      priceDiv.textContent = formatPrice(product.price);
+
+      // Description section
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.className = 'product-detail-description';
+      
+      const descH3 = document.createElement('h3');
+      descH3.textContent = 'Description';
+      
+      const descP = document.createElement('p');
+      descP.textContent = product.description;
+      
+      descriptionDiv.appendChild(descH3);
+      descriptionDiv.appendChild(descP);
+
+      // Actions section
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'product-detail-actions';
+
+      // Quantity selector
+      const quantitySelector = document.createElement('div');
+      quantitySelector.className = 'quantity-selector';
+      
+      const quantityLabel = document.createElement('label');
+      quantityLabel.setAttribute('for', 'productQuantity');
+      quantityLabel.textContent = 'Quantity:';
+      
+      const quantityControls = document.createElement('div');
+      quantityControls.className = 'quantity-controls';
+      
+      // Minus button
+      const minusBtn = document.createElement('button');
+      minusBtn.type = 'button';
+      minusBtn.className = 'quantity-btn';
+      minusBtn.onclick = () => ProductsComponent.updateQuantity(-1);
+      const minusIcon = document.createElement('i');
+      minusIcon.className = 'fas fa-minus';
+      minusBtn.appendChild(minusIcon);
+      
+      // Quantity input
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.value = '1';
+      quantityInput.min = '1';
+      quantityInput.max = '99';
+      quantityInput.className = 'quantity-input';
+      quantityInput.id = 'productQuantity';
+      
+      // Plus button
+      const plusBtn = document.createElement('button');
+      plusBtn.type = 'button';
+      plusBtn.className = 'quantity-btn';
+      plusBtn.onclick = () => ProductsComponent.updateQuantity(1);
+      const plusIcon = document.createElement('i');
+      plusIcon.className = 'fas fa-plus';
+      plusBtn.appendChild(plusIcon);
+      
+      quantityControls.appendChild(minusBtn);
+      quantityControls.appendChild(quantityInput);
+      quantityControls.appendChild(plusBtn);
+      
+      quantitySelector.appendChild(quantityLabel);
+      quantitySelector.appendChild(quantityControls);
+
+      // Product actions
+      const productActions = document.createElement('div');
+      productActions.className = 'product-actions';
+      
+      // Add to cart button
+      const addToCartBtn = document.createElement('button');
+      addToCartBtn.className = 'btn btn-primary btn-add-to-cart';
+      addToCartBtn.onclick = () => ProductsComponent.addToCart(productId);
+      
+      const cartIcon = document.createElement('i');
+      cartIcon.className = 'fas fa-shopping-basket';
+      const cartText = document.createTextNode(' Add to Basket');
+      
+      addToCartBtn.appendChild(cartIcon);
+      addToCartBtn.appendChild(cartText);
+      
+      // Back button
+      const backBtn = document.createElement('button');
+      backBtn.className = 'btn btn-outline';
+      backBtn.onclick = () => App.showPage('home');
+      
+      const backIcon = document.createElement('i');
+      backIcon.className = 'fas fa-arrow-left';
+      const backText = document.createTextNode(' Back to search');
+      
+      backBtn.appendChild(backIcon);
+      backBtn.appendChild(backText);
+      
+      productActions.appendChild(addToCartBtn);
+      productActions.appendChild(backBtn);
+      
+      actionsDiv.appendChild(quantitySelector);
+      actionsDiv.appendChild(productActions);
+
+      // Assemble info section
+      infoSection.appendChild(nameH1);
+      infoSection.appendChild(categoryP);
+      infoSection.appendChild(priceDiv);
+      infoSection.appendChild(descriptionDiv);
+      infoSection.appendChild(actionsDiv);
+
+      // Assemble layout
+      layoutDiv.appendChild(imageSection);
+      layoutDiv.appendChild(infoSection);
+      
+      // Add to container
+      container.appendChild(layoutDiv);
 
       console.log('Product detail content populated');
       
@@ -811,34 +944,62 @@ const ProfileComponent = {
     const email = user.email || 'Not provided';
     const homeAddress = user.homeAddress || user.home_address || 'Not provided';
 
-    container.innerHTML = `
-      <div class="profile-info-item">
-        <label>First Name:</label>
-        <span>${escapeHtml(firstName)}</span>
-      </div>
-      <div class="profile-info-item">
-        <label>Last Name:</label>
-        <span>${escapeHtml(lastName)}</span>
-      </div>
-      <div class="profile-info-item">
-        <label>Email:</label>
-        <span>${escapeHtml(email)}</span>
-      </div>
-      <div class="profile-info-item">
-        <label>Home Address:</label>
-        <span>${escapeHtml(homeAddress)}</span>
-      </div>
-      <div class="profile-actions">
-        <button class="btn btn-primary" onclick="ProfileComponent.startEditing()">
-          <i class="fas fa-edit"></i>
-          Edit Profile
-        </button>
-        <button class="btn btn-outline" onclick="ProfileComponent.logout()">
-          <i class="fas fa-sign-out-alt"></i>
-          Logout
-        </button>
-      </div>
-    `;
+    // Clear existing content
+    container.innerHTML = '';
+
+    // Create profile info items
+    const createInfoItem = (labelText, value) => {
+      const div = document.createElement('div');
+      div.className = 'profile-info-item';
+      
+      const label = document.createElement('label');
+      label.textContent = labelText;
+      
+      const span = document.createElement('span');
+      span.textContent = value;
+      
+      div.appendChild(label);
+      div.appendChild(span);
+      return div;
+    };
+
+    // Create info items
+    container.appendChild(createInfoItem('First Name:', firstName));
+    container.appendChild(createInfoItem('Last Name:', lastName));
+    container.appendChild(createInfoItem('Email:', email));
+    container.appendChild(createInfoItem('Home Address:', homeAddress));
+
+    // Create actions div
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'profile-actions';
+
+    // Edit button
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-primary';
+    editBtn.onclick = () => ProfileComponent.startEditing();
+    
+    const editIcon = document.createElement('i');
+    editIcon.className = 'fas fa-edit';
+    const editText = document.createTextNode(' Edit Profile');
+    
+    editBtn.appendChild(editIcon);
+    editBtn.appendChild(editText);
+
+    // Logout button
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'btn btn-outline';
+    logoutBtn.onclick = () => ProfileComponent.logout();
+    
+    const logoutIcon = document.createElement('i');
+    logoutIcon.className = 'fas fa-sign-out-alt';
+    const logoutText = document.createTextNode(' Logout');
+    
+    logoutBtn.appendChild(logoutIcon);
+    logoutBtn.appendChild(logoutText);
+
+    actionsDiv.appendChild(editBtn);
+    actionsDiv.appendChild(logoutBtn);
+    container.appendChild(actionsDiv);
   },
 
   // Render edit form
@@ -848,43 +1009,145 @@ const ProfileComponent = {
     const email = user.email || '';
     const homeAddress = user.homeAddress || user.home_address || '';
 
-    container.innerHTML = `
-      <form id="profileEditForm" class="profile-edit-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="editFirstName">First Name</label>
-            <input type="text" id="editFirstName" value="${escapeHtml(firstName)}" required class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="editLastName">Last Name</label>
-            <input type="text" id="editLastName" value="${escapeHtml(lastName)}" required class="form-input">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="editEmail">Email</label>
-          <input type="email" id="editEmail" value="${escapeHtml(email)}" class="form-input" placeholder="Enter your email address">
-          <small class="form-note">
-            <i class="fas fa-info-circle"></i>
-            Changing your email will require verification. A confirmation link will be sent to your new email address.
-          </small>
-        </div>
-        <div class="form-group">
-          <label for="editHomeAddress">Home Address</label>
-          <textarea id="editHomeAddress" required class="form-input" rows="3" placeholder="Enter your full home address">${escapeHtml(homeAddress)}</textarea>
-        </div>
+    // Clear existing content
+    container.innerHTML = '';
 
-        <div class="profile-actions">
-          <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i>
-            Save Changes
-          </button>
-          <button type="button" class="btn btn-outline" onclick="ProfileComponent.cancelEditing()">
-            <i class="fas fa-times"></i>
-            Cancel
-          </button>
-        </div>
-      </form>
-    `;
+    // Create form
+    const form = document.createElement('form');
+    form.id = 'profileEditForm';
+    form.className = 'profile-edit-form';
+
+    // Form row for first and last name
+    const formRow = document.createElement('div');
+    formRow.className = 'form-row';
+
+    // First name group
+    const firstNameGroup = document.createElement('div');
+    firstNameGroup.className = 'form-group';
+    
+    const firstNameLabel = document.createElement('label');
+    firstNameLabel.setAttribute('for', 'editFirstName');
+    firstNameLabel.textContent = 'First Name';
+    
+    const firstNameInput = document.createElement('input');
+    firstNameInput.type = 'text';
+    firstNameInput.id = 'editFirstName';
+    firstNameInput.value = firstName;
+    firstNameInput.required = true;
+    firstNameInput.className = 'form-input';
+    
+    firstNameGroup.appendChild(firstNameLabel);
+    firstNameGroup.appendChild(firstNameInput);
+
+    // Last name group
+    const lastNameGroup = document.createElement('div');
+    lastNameGroup.className = 'form-group';
+    
+    const lastNameLabel = document.createElement('label');
+    lastNameLabel.setAttribute('for', 'editLastName');
+    lastNameLabel.textContent = 'Last Name';
+    
+    const lastNameInput = document.createElement('input');
+    lastNameInput.type = 'text';
+    lastNameInput.id = 'editLastName';
+    lastNameInput.value = lastName;
+    lastNameInput.required = true;
+    lastNameInput.className = 'form-input';
+    
+    lastNameGroup.appendChild(lastNameLabel);
+    lastNameGroup.appendChild(lastNameInput);
+
+    formRow.appendChild(firstNameGroup);
+    formRow.appendChild(lastNameGroup);
+
+    // Email group
+    const emailGroup = document.createElement('div');
+    emailGroup.className = 'form-group';
+    
+    const emailLabel = document.createElement('label');
+    emailLabel.setAttribute('for', 'editEmail');
+    emailLabel.textContent = 'Email';
+    
+    const emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.id = 'editEmail';
+    emailInput.value = email;
+    emailInput.className = 'form-input';
+    emailInput.placeholder = 'Enter your email address';
+    
+    const emailNote = document.createElement('small');
+    emailNote.className = 'form-note';
+    
+    const emailIcon = document.createElement('i');
+    emailIcon.className = 'fas fa-info-circle';
+    
+    const emailNoteText = document.createTextNode(' Changing your email will require verification. A confirmation link will be sent to your new email address.');
+    
+    emailNote.appendChild(emailIcon);
+    emailNote.appendChild(emailNoteText);
+    
+    emailGroup.appendChild(emailLabel);
+    emailGroup.appendChild(emailInput);
+    emailGroup.appendChild(emailNote);
+
+    // Home address group
+    const addressGroup = document.createElement('div');
+    addressGroup.className = 'form-group';
+    
+    const addressLabel = document.createElement('label');
+    addressLabel.setAttribute('for', 'editHomeAddress');
+    addressLabel.textContent = 'Home Address';
+    
+    const addressTextarea = document.createElement('textarea');
+    addressTextarea.id = 'editHomeAddress';
+    addressTextarea.required = true;
+    addressTextarea.className = 'form-input';
+    addressTextarea.rows = 3;
+    addressTextarea.placeholder = 'Enter your full home address';
+    addressTextarea.value = homeAddress;
+    
+    addressGroup.appendChild(addressLabel);
+    addressGroup.appendChild(addressTextarea);
+
+    // Actions
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'profile-actions';
+
+    // Save button
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'submit';
+    saveBtn.className = 'btn btn-primary';
+    
+    const saveIcon = document.createElement('i');
+    saveIcon.className = 'fas fa-save';
+    const saveText = document.createTextNode(' Save Changes');
+    
+    saveBtn.appendChild(saveIcon);
+    saveBtn.appendChild(saveText);
+
+    // Cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-outline';
+    cancelBtn.onclick = () => ProfileComponent.cancelEditing();
+    
+    const cancelIcon = document.createElement('i');
+    cancelIcon.className = 'fas fa-times';
+    const cancelText = document.createTextNode(' Cancel');
+    
+    cancelBtn.appendChild(cancelIcon);
+    cancelBtn.appendChild(cancelText);
+
+    actionsDiv.appendChild(saveBtn);
+    actionsDiv.appendChild(cancelBtn);
+
+    // Assemble form
+    form.appendChild(formRow);
+    form.appendChild(emailGroup);
+    form.appendChild(addressGroup);
+    form.appendChild(actionsDiv);
+
+    container.appendChild(form);
 
     // Add form submit listener
     document.getElementById('profileEditForm').addEventListener('submit', (e) => {
