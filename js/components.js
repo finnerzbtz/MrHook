@@ -2,19 +2,82 @@
 
 // Products Component
 const ProductsComponent = {
-  filteredProducts: products,
+  filteredProducts: [],
+  allProducts: [],
+  isLoading: false,
+
+  // Initialize and load products from backend
+  async init() {
+    await this.loadProducts();
+    this.render();
+  },
+
+  // Load products from backend API
+  async loadProducts(filters = {}) {
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    this.showLoadingState();
+
+    try {
+      console.log('Loading products from API...');
+      this.allProducts = await API.getProducts(filters);
+      this.filteredProducts = this.allProducts;
+      console.log('Products loaded:', this.allProducts.length);
+      this.render();
+    } catch (error) {
+      console.error('Failed to load products:', error);
+      this.showErrorState('Failed to load products. Please refresh the page.');
+    } finally {
+      this.isLoading = false;
+    }
+  },
+
+  // Show loading state
+  showLoadingState() {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = `
+      <div class="loading-products">
+        <div class="spinner-ring"></div>
+        <p>Loading our fishing products...</p>
+      </div>
+    `;
+  },
+
+  // Show error state
+  showErrorState(message) {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+
+    grid.innerHTML = `
+      <div class="error-products">
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+        <h3>Oops! Something went wrong</h3>
+        <p>${message}</p>
+        <button class="btn btn-primary" onclick="ProductsComponent.loadProducts()">
+          <i class="fas fa-redo"></i>
+          Try Again
+        </button>
+      </div>
+    `;
+  },
 
   // Render products grid
   render() {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
 
-    if (this.filteredProducts.length === 0) {
+    if (this.filteredProducts.length === 0 && !this.isLoading) {
       grid.innerHTML = `
         <div class="no-products">
           <i class="fas fa-fish" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
           <h3>No products found</h3>
           <p>Try adjusting your filters to see more products.</p>
+          <button class="btn btn-secondary" onclick="ProductsComponent.resetFilters()">
+            Reset Filters
+          </button>
         </div>
       `;
       return;
@@ -25,7 +88,7 @@ const ProductsComponent = {
         <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-image" loading="lazy">
         <div class="product-info">
           <h3 class="product-name">${escapeHtml(product.name)}</h3>
-          <p class="product-category">${formatCategory(product.category)}</p>
+          <p class="product-category">${formatCategory(product.category || product.type)}</p>
           <div class="product-price">${formatPrice(product.price)}</div>
         </div>
       </div>
@@ -47,73 +110,51 @@ const ProductsComponent = {
     }, 100);
   },
 
-  // Show product detail (replace products grid)
-  showProductDetail(productId) {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+  // Show product detail modal
+  async showProductDetail(productId) {
+    try {
+      // Get product details from backend
+      const product = await API.getProduct(productId);
+      
+      const modal = document.getElementById('productModal');
+      const detail = document.getElementById('productDetail');
 
-    const grid = document.getElementById('productsGrid');
-    if (!grid) return;
-
-    // Hide filters when showing product detail
-    const filters = document.getElementById('filters');
-    if (filters) {
-      filters.style.display = 'none';
-    }
-
-    grid.innerHTML = `
-      <div class="product-detail-container">
-        <div class="product-detail-content">
-          <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
-          <div class="product-detail-info">
-            <h2 class="product-detail-name">${escapeHtml(product.name)}</h2>
-            <p class="product-detail-category">${formatCategory(product.category)}</p>
-            <div class="product-detail-price">${formatPrice(product.price)}</div>
-            <p class="product-detail-description">${escapeHtml(product.description)}</p>
-
-            <div class="quantity-selector">
-              <label>Quantity:</label>
-              <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
-                <i class="fas fa-minus"></i>
-              </button>
-              <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
-              <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
-                <i class="fas fa-plus"></i>
-              </button>
-            </div>
-
-            <div class="product-actions">
-              <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
-                <i class="fas fa-shopping-basket"></i>
-                Add to Basket
-              </button>
-              <button class="btn btn-outline" onclick="ProductsComponent.backToSearch()">
-                <i class="fas fa-arrow-left"></i>
-                Back to Search
-              </button>
-            </div>
-          </div>
+      detail.innerHTML = `
+        <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
+        <div class="product-detail-info">
+          <h2 class="product-detail-name">${escapeHtml(product.name)}</h2>
+          <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
+          <div class="product-detail-price">${formatPrice(product.price)}</div>
+          <p class="product-detail-description">${escapeHtml(product.description)}</p>
         </div>
-      </div>
-    `;
+        <div class="quantity-selector">
+          <label>Quantity:</label>
+          <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
+            <i class="fas fa-minus"></i>
+          </button>
+          <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
+          <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="product-actions">
+          <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
+            <i class="fas fa-shopping-basket"></i>
+            Add to Basket
+          </button>
+          <button class="btn btn-outline" onclick="closeProductModal()">
+            <i class="fas fa-arrow-left"></i>
+            Back to Products
+          </button>
+        </div>
+      `;
 
-    // Store current product for quantity updates
-    this.currentProduct = productId;
-  },
-
-  // Back to search function
-  backToSearch() {
-    // Show filters again
-    const filters = document.getElementById('filters');
-    if (filters) {
-      filters.style.display = 'block';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } catch (error) {
+      console.error('Failed to load product details:', error);
+      Toast.show('Failed to load product details', 'error');
     }
-
-    // Clear current product
-    this.currentProduct = null;
-
-    // Re-render the products grid
-    this.render();
   },
 
   // Update quantity in modal
@@ -126,7 +167,7 @@ const ProductsComponent = {
     input.value = newValue;
   },
 
-  // Add product to cart
+  // Add product to cart - backend only
   async addToCart(productId) {
     if (!Auth.isLoggedIn()) {
       Toast.show('Please login to add items to your basket', 'error');
@@ -138,99 +179,128 @@ const ProductsComponent = {
     const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
 
     try {
-      // Add to backend cart via API
+      // Add to backend cart
       await API.addToCart(productId, quantity);
       
-      // Also add to local cart for immediate UI updates
-      Cart.add(productId, quantity);
+      // Update UI cart count
+      await this.updateCartUIFromBackend();
+      
+      const product = this.allProducts.find(p => p.id === productId);
+      Toast.show(`${product?.name || 'Product'} added to basket!`);
 
-      const product = products.find(p => p.id === productId);
-      Toast.show(`${product.name} added to basket!`);
-
-      // Go back to search after adding to cart
-      this.backToSearch();
+      closeProductModal();
     } catch (error) {
       console.error('Failed to add to cart:', error);
-      Toast.show('Failed to add item to basket. Please try again.', 'error');
+      Toast.show('Failed to add item to basket', 'error');
     }
   },
 
-  // Apply filters
-  applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const priceRange = parseFloat(document.getElementById('priceRange').value);
+  // Update cart UI from backend
+  async updateCartUIFromBackend() {
+    try {
+      const cart = await API.getCart();
+      const count = cart.reduce((total, item) => total + item.quantity, 0);
+      
+      const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
+      cartElements.forEach(element => {
+        element.textContent = count;
+        element.style.display = count > 0 ? 'block' : 'none';
+      });
+    } catch (error) {
+      console.error('Failed to update cart UI:', error);
+    }
+  },
 
-    this.filteredProducts = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm) ||
-                           product.description.toLowerCase().includes(searchTerm);
-      const matchesCategory = !categoryFilter || product.category === categoryFilter;
-      const matchesPrice = product.price <= priceRange;
+  // Apply filters using backend API
+  async applyFilters() {
+    const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+    const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+    const priceRange = parseFloat(document.getElementById('priceRange')?.value || '200');
 
-      return matchesSearch && matchesCategory && matchesPrice;
-    });
+    const filters = {};
+    if (searchTerm) filters.search = searchTerm;
+    if (categoryFilter) filters.category = categoryFilter;
+    if (priceRange < 200) filters.maxPrice = priceRange;
 
-    this.render();
+    await this.loadProducts(filters);
   },
 
   // Reset filters
-  resetFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('categoryFilter').value = '';
-    document.getElementById('priceRange').value = '200';
-    document.getElementById('priceValue').textContent = '200';
+  async resetFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
 
-    this.filteredProducts = products;
-    this.render();
+    if (searchInput) searchInput.value = '';
+    if (categoryFilter) categoryFilter.value = '';
+    if (priceRange) priceRange.value = '200';
+    if (priceValue) priceValue.textContent = '200';
+
+    await this.loadProducts();
   }
 };
 
-// Filter by category from category cards
-function filterByCategory(categoryType) {
+// Filter by category from category cards - backend driven
+async function filterByCategory(categoryType) {
   const searchInput = document.getElementById('searchInput');
   const categoryFilter = document.getElementById('categoryFilter');
   const priceRange = document.getElementById('priceRange');
   const priceValue = document.getElementById('priceValue');
 
-  // Reset filters first
-  searchInput.value = '';
-  priceRange.value = '200';
-  priceValue.textContent = '200';
+  // Reset other filters first
+  if (searchInput) searchInput.value = '';
+  if (priceRange) priceRange.value = '200';
+  if (priceValue) priceValue.textContent = '200';
 
   // Set category filter based on the category type
+  let filterValue = '';
   switch(categoryType) {
     case 'fishing-rods':
-      categoryFilter.value = 'fishing-rods';
+      filterValue = 'fishing-rods';
       break;
     case 'bait-hooks':
-      // Show both bait and hooks
-      categoryFilter.value = '';
-      // Filter manually for bait and hooks
-      ProductsComponent.filteredProducts = products.filter(product => 
-        product.category === 'bait' || product.category === 'hooks'
-      );
-      ProductsComponent.render();
-      smoothScrollTo('productsSection');
-      return;
+      // For combined categories, we'll need to handle this specially
+      // Clear category filter and let the backend handle the search
+      filterValue = '';
+      if (searchInput) searchInput.value = 'bait hooks';
+      break;
     case 'containers-more':
-      // Show containers and other
-      categoryFilter.value = '';
-      // Filter manually for containers and other
-      ProductsComponent.filteredProducts = products.filter(product => 
-        product.category === 'containers' || product.category === 'other'
-      );
-      ProductsComponent.render();
-      smoothScrollTo('productsSection');
-      return;
+      // For combined categories, use search instead
+      filterValue = '';
+      if (searchInput) searchInput.value = 'containers';
+      break;
     default:
-      categoryFilter.value = '';
+      filterValue = '';
   }
 
-  // Apply the filter
-  ProductsComponent.applyFilters();
+  if (categoryFilter) categoryFilter.value = filterValue;
+
+  // Apply the filter using backend
+  await ProductsComponent.applyFilters();
 
   // Scroll to products section
   smoothScrollTo('productsSection');
+}
+
+// Close product modal
+function closeProductModal() {
+  const modal = document.getElementById('productModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+// Global utility function for smooth scrolling
+function smoothScrollTo(targetId) {
+  const element = document.getElementById(targetId);
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 }
 
 // Authentication Component
@@ -254,10 +324,7 @@ const AuthComponent = {
 
     try {
       const response = await API.login(email, password);
-
-      // Store user data locally for Auth.getCurrentUser()
-      localStorage.setItem('currentUser', JSON.stringify(response.user));
-
+      
       const userName = response.user.firstName || response.user.first_name || 'User';
       Toast.show(`Welcome back, ${userName}!`);
       App.updateAuthUI();
@@ -275,17 +342,33 @@ const AuthComponent = {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
-    const homeAddress = document.getElementById('homeAddress').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (!firstName || !lastName || !email || !homeAddress || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Toast.show('Please fill in all fields', 'error');
       return;
     }
 
     if (password !== confirmPassword) {
       Toast.show('Passwords do not match', 'error');
+      return;
+    }
+
+    // Get address from form fields
+    const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
+    const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
+    const city = document.getElementById('city')?.value.trim() || '';
+    const postcode = document.getElementById('postcode')?.value.trim() || '';
+    const county = document.getElementById('county')?.value.trim() || '';
+
+    // Build home address string
+    const addressParts = [addressLine1, addressLine2, city, postcode, county].filter(part => part);
+    const homeAddress = addressParts.join(', ');
+
+    // Validate required address fields
+    if (!addressLine1 || !city || !postcode) {
+      Toast.show('Please complete your address details', 'error');
       return;
     }
 
@@ -303,13 +386,13 @@ const AuthComponent = {
       const userData = { 
         firstName, 
         lastName, 
-        homeAddress,
         email, 
+        homeAddress,
         password 
       };
-
+      
       const response = await API.register(userData);
-
+      
       Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
@@ -334,29 +417,36 @@ const AuthComponent = {
   // Show password reset modal
   showPasswordReset() {
     const modal = document.getElementById('passwordResetModal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
 
-    // Add form listener
-    const form = document.getElementById('passwordResetForm');
-    form.addEventListener('submit', this.handlePasswordReset);
+      // Add form listener
+      const form = document.getElementById('passwordResetForm');
+      if (form) {
+        form.addEventListener('submit', this.handlePasswordReset);
+      }
+    }
   },
 
   // Close password reset modal
   closePasswordReset() {
     const modal = document.getElementById('passwordResetModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
 
-    // Reset form
-    document.getElementById('passwordResetForm').reset();
+      // Reset form
+      const form = document.getElementById('passwordResetForm');
+      if (form) form.reset();
+    }
   },
 
   // Handle password reset
   handlePasswordReset(event) {
     event.preventDefault();
 
-    const email = document.getElementById('resetEmail').value.trim();
+    const email = document.getElementById('resetEmail')?.value.trim();
 
     if (!email) {
       Toast.show('Please enter your email address', 'error');
@@ -368,14 +458,9 @@ const AuthComponent = {
       return;
     }
 
-    const success = Auth.requestPasswordReset(email);
-
-    if (success) {
-      Toast.show('Password reset link sent to your email!');
-      AuthComponent.closePasswordReset();
-    } else {
-      Toast.show('Email address not found', 'error');
-    }
+    // For demo purposes, just show success message
+    Toast.show('Password reset link sent to your email!');
+    AuthComponent.closePasswordReset();
   }
 };
 
@@ -385,8 +470,7 @@ const ProfileComponent = {
 
   // Render profile information
   async render() {
-    const user = Auth.getCurrentUser();
-    if (!user) {
+    if (!Auth.isLoggedIn()) {
       App.showPage('login');
       return;
     }
@@ -394,31 +478,98 @@ const ProfileComponent = {
     const profileInfo = document.getElementById('profileInfo');
     const ordersList = document.getElementById('ordersList');
 
-    // Fetch fresh user data from API to ensure we have complete profile
+    if (!profileInfo || !ordersList) {
+      console.error('Profile elements not found');
+      return;
+    }
+
+    // Show loading state
+    profileInfo.innerHTML = '<div class="loading-spinner"><div class="spinner-ring"></div><p>Loading profile...</p></div>';
+    ordersList.innerHTML = '<div class="loading-spinner"><div class="spinner-ring"></div><p>Loading orders...</p></div>';
+
     try {
-      const freshUserData = await API.getProfile();
-      // Update local storage with complete user data
-      localStorage.setItem('currentUser', JSON.stringify(freshUserData.user));
+      // Fetch fresh user data from API
+      console.log('Loading profile from API...');
+      const response = await API.getProfile();
+      const user = response.user;
 
-      const completeUser = freshUserData.user;
-
-      if (this.isEditing) {
-        this.renderEditForm(profileInfo, completeUser);
-      } else {
-        this.renderViewMode(profileInfo, completeUser);
-      }
-
-      this.renderOrders(ordersList, completeUser);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      // Fallback to stored user data
       if (this.isEditing) {
         this.renderEditForm(profileInfo, user);
       } else {
         this.renderViewMode(profileInfo, user);
       }
 
-      this.renderOrders(ordersList, user);
+      // Load orders from backend
+      await this.renderOrdersFromBackend(ordersList);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      profileInfo.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to load profile. Please refresh the page.</p>
+        </div>
+      `;
+      ordersList.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to load order history.</p>
+        </div>
+      `;
+    }
+  },
+
+  // Render orders from backend
+  async renderOrdersFromBackend(container) {
+    try {
+      console.log('Loading orders from API...');
+      const orders = await API.getOrders();
+      console.log('Orders loaded:', orders.length);
+
+      if (orders.length === 0) {
+        container.innerHTML = `
+          <div class="no-orders">
+            <i class="fas fa-receipt" style="font-size: 2rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
+            <p>No orders yet. Start shopping to see your order history!</p>
+            <button class="btn btn-primary" onclick="App.showPage('home')">
+              Start Shopping
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = orders.map(order => `
+        <div class="order-item stagger-item">
+          <div class="order-header">
+            <h4>Order #${order.id}</h4>
+            <span class="order-date">${formatDate(order.createdAt || order.date_ordered)}</span>
+            <span class="order-status ${order.status || 'completed'}">${(order.status || 'completed').toUpperCase()}</span>
+          </div>
+          <div class="order-items">
+            ${order.items ? order.items.map(item => `
+              <div class="order-product">
+                <span class="product-name">${escapeHtml(item.name || 'Product')}</span>
+                <span class="product-quantity">Qty: ${item.quantity}</span>
+                <span class="product-subtotal">${formatPrice(item.subtotal || (item.price * item.quantity))}</span>
+              </div>
+            `).join('') : '<p>No items found</p>'}
+          </div>
+          <div class="order-total">
+            <strong>Total: ${formatPrice(order.total || order.total_price)}</strong>
+          </div>
+        </div>
+      `).join('');
+    } catch (error) {
+      console.error('Failed to load orders:', error);
+      container.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to load order history. Please try again later.</p>
+          <button class="btn btn-secondary" onclick="ProfileComponent.render()">
+            Retry
+          </button>
+        </div>
+      `;
     }
   },
 
@@ -485,9 +636,9 @@ const ProfileComponent = {
         </div>
         <div class="form-group">
           <label for="editHomeAddress">Home Address</label>
-          <textarea id="editHomeAddress" required class="form-textarea">${escapeHtml(homeAddress)}</textarea>
+          <textarea id="editHomeAddress" required class="form-input" rows="3" placeholder="Enter your full home address">${escapeHtml(homeAddress)}</textarea>
         </div>
-
+        
         <div class="profile-actions">
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i>
@@ -507,46 +658,7 @@ const ProfileComponent = {
     });
   },
 
-  // Render orders section
-  renderOrders(container, user) {
-
-    const userOrders = mockOrders.filter(order => order.userId === user.id);
-
-    if (userOrders.length === 0) {
-      container.innerHTML = `
-        <div class="no-orders">
-          <i class="fas fa-receipt" style="font-size: 2rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
-          <p>No orders yet. Start shopping to see your order history!</p>
-        </div>
-      `;
-    } else {
-      container.innerHTML = userOrders.map(order => `
-        <div class="order-item stagger-item">
-          <div class="order-header">
-            <h4>Order #${order.id}</h4>
-            <span class="order-date">${formatDate(order.date)}</span>
-          </div>
-          <div class="order-items">
-            ${order.items.map(item => {
-              const product = products.find(p => p.id === item.productId);
-              return `
-                <div class="order-product">
-                  <span>${product ? product.name : 'Unknown Product'}</span>
-                  <span>Qty: ${item.quantity}</span>
-                  <span>${formatPrice(item.price * item.quantity)}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-          <div class="order-total">
-            <strong>Total: ${formatPrice(order.total)}</strong>
-          </div>
-        </div>
-      `).join('');
-    }
-  },
-
-  // Start editing mode
+  // Start editing
   startEditing() {
     this.isEditing = true;
     this.render();
@@ -573,32 +685,38 @@ const ProfileComponent = {
     }
 
     try {
+      // Show loading state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+      }
+
       // Update profile via API - send homeAddress as a simple string
-      const response = await API.updateProfile({
+      console.log('Updating profile...');
+      await API.updateProfile({
         firstName,
         lastName,
         homeAddress
       });
 
-      // Update local storage with fresh data
-      localStorage.setItem('currentUser', JSON.stringify(response.user));
-
       this.isEditing = false;
-      this.render();
-
       Toast.show('Profile updated successfully!');
+      
+      // Refresh the profile display
+      await this.render();
     } catch (error) {
       console.error('Profile update error:', error);
       Toast.show(error.message || 'Error updating profile. Please try again.', 'error');
     }
   },
 
-  // Logout user
+  // Logout
   logout() {
     Auth.logout();
-    Toast.show('Logged out successfully');
     App.updateAuthUI();
     App.showPage('home');
+    Toast.show('Logged out successfully');
   }
 };
 
@@ -619,34 +737,34 @@ const BasketComponent = {
       return;
     }
     
-    // Load cart from API to ensure sync with backend
-    let cart = [];
-    try {
-      // Only try API if we have proper authentication
-      if (window.API && window.API.token) {
-        console.log('Loading cart from API...');
-        cart = await API.getCart();
-        console.log('Cart loaded from API:', cart.length, 'items');
-        
-        // Sync local cart with backend
-        const localCart = cart.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity
-        }));
-        Storage.set('cart', localCart);
-        Cart.updateCartUI();
-      } else {
-        throw new Error('No authentication token available');
-      }
-    } catch (error) {
-      console.warn('Failed to load cart from API, using local data:', error);
-      // Fallback to local cart
-      cart = Cart.get().map(item => {
-        const product = products.find(p => p.id === item.productId);
-        return { ...item, product };
-      }).filter(item => item.product); // Remove items without valid products
-    }
+    // Show loading state
+    basketContent.innerHTML = '<div class="loading-spinner"><div class="spinner-ring"></div><p>Loading your basket...</p></div>';
+    basketSummary.innerHTML = '';
 
+    try {
+      // Load cart from backend only
+      console.log('Loading cart from API...');
+      const cart = await API.getCart();
+      console.log('Cart loaded from API:', cart.length, 'items');
+      
+      this.renderBasketContent(basketContent, basketSummary, cart);
+    } catch (error) {
+      console.error('Failed to load cart from API:', error);
+      basketContent.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Failed to load your basket. Please try again.</p>
+          <button class="btn btn-secondary" onclick="BasketComponent.render()">
+            Retry
+          </button>
+        </div>
+      `;
+      basketSummary.innerHTML = '';
+    }
+  },
+
+  // Render basket content and summary
+  renderBasketContent(basketContent, basketSummary, cart) {
     if (cart.length === 0) {
       basketContent.innerHTML = `
         <div class="empty-basket">
@@ -662,54 +780,44 @@ const BasketComponent = {
       return;
     }
 
+    // Calculate total
+    const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+
     // Render basket items
     basketContent.innerHTML = cart.map(item => {
-      const product = item.product || products.find(p => p.id === item.productId);
+      const product = item.product;
       if (!product) return '';
 
-      const subtotal = product.price * item.quantity;
-
       return `
-        <div class="basket-item stagger-item">
+        <div class="basket-item">
           <img src="${product.image}" alt="${escapeHtml(product.name)}" class="basket-item-image">
           <div class="basket-item-info">
             <h4 class="basket-item-name">${escapeHtml(product.name)}</h4>
-            <p class="basket-item-price">${formatPrice(product.price)} each</p>
+            <p class="basket-item-category">${formatCategory(product.category || product.type)}</p>
+            <div class="basket-item-price">${formatPrice(product.price)}</div>
           </div>
           <div class="basket-item-controls">
-            <button class="quantity-btn" onclick="BasketComponent.updateQuantity(${item.productId}, ${item.quantity - 1})">
-              <i class="fas fa-minus"></i>
-            </button>
-            <span class="quantity-display">${item.quantity}</span>
-            <button class="quantity-btn" onclick="BasketComponent.updateQuantity(${item.productId}, ${item.quantity + 1})">
-              <i class="fas fa-plus"></i>
-            </button>
-            <button class="btn btn-outline" onclick="BasketComponent.removeItem(${item.productId})" style="margin-left: 1rem;">
+            <div class="quantity-controls">
+              <button class="quantity-btn" onclick="BasketComponent.updateQuantity(${product.id}, ${item.quantity - 1})">
+                <i class="fas fa-minus"></i>
+              </button>
+              <span class="quantity-display">${item.quantity}</span>
+              <button class="quantity-btn" onclick="BasketComponent.updateQuantity(${product.id}, ${item.quantity + 1})">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            <div class="item-subtotal">${formatPrice(product.price * item.quantity)}</div>
+            <button class="btn-remove" onclick="BasketComponent.removeItem(${product.id})">
               <i class="fas fa-trash"></i>
             </button>
-          </div>
-          <div class="basket-item-subtotal">
-            ${formatPrice(subtotal)}
           </div>
         </div>
       `;
     }).join('');
 
-    // Render basket summary
-    const total = cart.reduce((sum, item) => {
-      const product = item.product || products.find(p => p.id === item.productId);
-      return sum + (product ? product.price * item.quantity : 0);
-    }, 0);
+    // Render summary
     basketSummary.innerHTML = `
-      <div class="summary-row">
-        <span>Subtotal:</span>
-        <span>${formatPrice(total)}</span>
-      </div>
-      <div class="summary-row">
-        <span>Shipping:</span>
-        <span>Free</span>
-      </div>
-      <div class="summary-row">
+      <div class="basket-summary-total">
         <span>Total:</span>
         <span>${formatPrice(total)}</span>
       </div>
@@ -720,44 +828,74 @@ const BasketComponent = {
     `;
   },
 
-  // Update item quantity
+  // Update item quantity - backend only
   async updateQuantity(productId, newQuantity) {
     try {
+      // Show loading state for the specific item
+      const itemControls = document.querySelector(`[onclick*="${productId}"]`)?.closest('.basket-item')?.querySelector('.quantity-controls');
+      if (itemControls) {
+        itemControls.style.opacity = '0.5';
+        itemControls.style.pointerEvents = 'none';
+      }
+
       if (newQuantity <= 0) {
         await API.removeFromCart(productId);
       } else {
         await API.updateCart(productId, newQuantity);
       }
       
-      // Update local cart as well
-      Cart.updateQuantity(productId, newQuantity);
+      // Update cart UI
+      await Cart.updateCartUI();
       
-      this.render();
+      // Re-render basket
+      await this.render();
     } catch (error) {
       console.error('Failed to update cart:', error);
       Toast.show('Failed to update cart. Please try again.', 'error');
+      
+      // Reset loading state
+      const itemControls = document.querySelector(`[onclick*="${productId}"]`)?.closest('.basket-item')?.querySelector('.quantity-controls');
+      if (itemControls) {
+        itemControls.style.opacity = '1';
+        itemControls.style.pointerEvents = 'auto';
+      }
     }
   },
 
-  // Remove item from basket
+  // Remove item from basket - backend only
   async removeItem(productId) {
     try {
+      const itemElement = document.querySelector(`[onclick*="removeItem(${productId})"]`)?.closest('.basket-item');
+      if (itemElement) {
+        itemElement.style.opacity = '0.5';
+        itemElement.style.pointerEvents = 'none';
+      }
+
       await API.removeFromCart(productId);
       
-      const product = products.find(p => p.id === productId);
-      Cart.remove(productId);
-      Toast.show(`${product.name} removed from basket`);
-      this.render();
+      // Update cart UI
+      await Cart.updateCartUI();
+      
+      Toast.show('Item removed from basket');
+      
+      // Re-render basket
+      await this.render();
     } catch (error) {
       console.error('Failed to remove from cart:', error);
       Toast.show('Failed to remove item. Please try again.', 'error');
+      
+      // Reset loading state
+      const itemElement = document.querySelector(`[onclick*="removeItem(${productId})"]`)?.closest('.basket-item');
+      if (itemElement) {
+        itemElement.style.opacity = '1';
+        itemElement.style.pointerEvents = 'auto';
+      }
     }
   },
 
-  // Place order
+  // Place order - backend only
   async placeOrder() {
-    const user = Auth.getCurrentUser();
-    if (!user) {
+    if (!Auth.isLoggedIn()) {
       Toast.show('Please login to place an order', 'error');
       App.showPage('login');
       return;
@@ -770,13 +908,14 @@ const BasketComponent = {
       return;
     }
 
-    const cart = Cart.get();
-    if (cart.length === 0) {
-      Toast.show('Your basket is empty', 'error');
-      return;
-    }
-
     try {
+      // Check if cart is empty first
+      const cart = await API.getCart();
+      if (cart.length === 0) {
+        Toast.show('Your basket is empty', 'error');
+        return;
+      }
+
       // Show loading state
       const checkoutBtn = document.querySelector('.btn-checkout');
       if (checkoutBtn) {
@@ -790,12 +929,12 @@ const BasketComponent = {
       }
 
       // Create order via API
-      console.log('Creating order...', { userToken: !!window.API?.token, cartItems: cart.length });
+      console.log('Creating order...');
       const response = await API.createOrder();
       console.log('Order creation response:', response);
 
-      // Clear cart after successful order
-      Cart.clear();
+      // Update cart UI
+      await Cart.updateCartUI();
 
       Toast.show('Order placed successfully! Thank you for your purchase.');
       App.showPage('home');
@@ -825,11 +964,6 @@ const BasketComponent = {
 };
 
 
-
-// Reset filters
-function resetFilters() {
-  ProductsComponent.resetFilters();
-} 
 
 // Video Hover Component
 const VideoHoverComponent = {

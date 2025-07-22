@@ -3,19 +3,50 @@ const App = {
   currentPage: 'home',
 
   // Initialize the application
-  init() {
+  async init() {
     this.setupEventListeners();
     this.updateAuthUI();
+    
+    // Initialize backend-driven components
+    await this.initializeComponents();
+    
     this.showPage('home');
     initUtils();
 
-    // Initialize products
-    ProductsComponent.render();
-
-    // Initialize video hover functionality
-    VideoHoverComponent.init();
-
     console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
+  },
+
+  // Initialize all components
+  async initializeComponents() {
+    try {
+      // Initialize products from backend
+      await ProductsComponent.init();
+      
+      // Update cart UI from backend if logged in
+      if (Auth.isLoggedIn()) {
+        await Cart.updateCartUI();
+      }
+      
+      // Initialize video hover functionality
+      VideoHoverComponent.init();
+    } catch (error) {
+      console.error('Failed to initialize components:', error);
+      // Show error message to user
+      const grid = document.getElementById('productsGrid');
+      if (grid) {
+        grid.innerHTML = `
+          <div class="error-products">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
+            <h3>Failed to load products</h3>
+            <p>Please check your internet connection and try again.</p>
+            <button class="btn btn-primary" onclick="App.initializeComponents()">
+              <i class="fas fa-redo"></i>
+              Retry
+            </button>
+          </div>
+        `;
+      }
+    }
   },
 
   // Setup all event listeners
@@ -24,12 +55,14 @@ const App = {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
 
-    mobileMenuBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      mobileMenuBtn.classList.toggle('active');
-      mobileMenu.classList.toggle('active');
-    });
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        mobileMenuBtn.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+      });
+    }
 
     // Navigation links
     document.addEventListener('click', (e) => {
@@ -41,22 +74,38 @@ const App = {
         this.showPage(page);
 
         // Close mobile menu if open
-        mobileMenuBtn.classList.remove('active');
-        mobileMenu.classList.remove('active');
+        if (mobileMenuBtn && mobileMenu) {
+          mobileMenuBtn.classList.remove('active');
+          mobileMenu.classList.remove('active');
+        }
       }
     });
 
     // Close mobile menu when clicking outside
     document.addEventListener('click', (e) => {
-      if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+      if (mobileMenu && mobileMenuBtn && 
+          !mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
         mobileMenuBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
       }
     });
 
-    
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById('productModal');
+      if (e.target === modal) {
+        closeProductModal();
+      }
+    });
 
-    // Search input
+    // Escape key to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeProductModal();
+      }
+    });
+
+    // Search input with debounce
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
       searchInput.addEventListener('input', debounce(() => {
@@ -124,6 +173,8 @@ const App = {
     let lastScrollY = window.scrollY;
     window.addEventListener('scroll', throttle(() => {
       const header = document.getElementById('mainHeader');
+      if (!header) return;
+      
       const currentScrollY = window.scrollY;
 
       // Always show header when at the top of the page
@@ -135,13 +186,6 @@ const App = {
       } else if (currentScrollY < lastScrollY) {
         // Show when scrolling up
         header.style.transform = 'translateY(0)';
-      }
-
-      // Add shadow when scrolled
-      if (currentScrollY > 10) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
       }
 
       lastScrollY = currentScrollY;
@@ -160,12 +204,15 @@ const App = {
     const productsSection = document.getElementById('productsSection');
 
     if (pageName === 'home') {
-      categoriesSection.style.display = 'block';
-      productsSection.style.display = 'block';
-      ProductsComponent.render();
+      if (categoriesSection) categoriesSection.style.display = 'block';
+      if (productsSection) productsSection.style.display = 'block';
+      // Products are already loaded from init, just render if needed
+      if (ProductsComponent.filteredProducts.length === 0) {
+        ProductsComponent.loadProducts();
+      }
     } else {
-      categoriesSection.style.display = 'none';
-      productsSection.style.display = 'none';
+      if (categoriesSection) categoriesSection.style.display = 'none';
+      if (productsSection) productsSection.style.display = 'none';
 
       // Show specific page
       const targetPage = document.getElementById(`${pageName}Page`);
@@ -199,9 +246,8 @@ const App = {
   },
 
   // Update authentication UI
-  updateAuthUI() {
+  async updateAuthUI() {
     const isLoggedIn = Auth.isLoggedIn();
-    const user = Auth.getCurrentUser();
 
     // Desktop navigation
     const navDesktop = document.querySelector('.nav-desktop');
@@ -216,6 +262,9 @@ const App = {
           </a>
           <a href="#" class="nav-link" onclick="ProfileComponent.logout()">Logout</a>
         `;
+        
+        // Update cart count from backend
+        await Cart.updateCartUI();
       } else {
         navDesktop.innerHTML = `
           <a href="#" class="nav-link active" data-page="home">Products</a>
@@ -246,6 +295,9 @@ const App = {
             Logout
           </a>
         `;
+        
+        // Update mobile cart count from backend
+        await Cart.updateCartUI();
       } else {
         mobileMenuContent.innerHTML = `
           <a href="#" class="mobile-nav-link" data-page="home">
@@ -259,9 +311,6 @@ const App = {
         `;
       }
     }
-
-    // Update cart count
-    Cart.updateCartUI();
 
     // Update active navigation state
     document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
@@ -303,7 +352,7 @@ function hideLoadingScreen() {
 }
 
 // Initialize application
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('🎣 Mr Hook Fishing Supplies - App Initializing...');
 
   try {
@@ -320,14 +369,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize components
-    setTimeout(() => {
+    setTimeout(async () => {
       hideLoadingScreen();
-      App.init();
+      await App.init();
     }, 1500);
   } catch (error) {
     console.error('Failed to initialize app:', error);
     hideLoadingScreen();
-    App.init();
+    await App.init();
   }
 });
 

@@ -58,124 +58,86 @@ const Storage = {
   }
 };
 
-// Cart Management
+// Cart Management - Backend Only
 const Cart = {
-  // Get current cart
-  get() {
-    return Storage.get('cart') || [];
-  },
-
-  // Add item to cart
-  async add(productId, quantity = 1) {
-    const cart = this.get();
-    const existingItem = cart.find(item => item.productId === productId);
-
-    if (existingItem) {
-      existingItem.quantity += quantity;
-    } else {
-      cart.push({ productId, quantity });
+  // Update cart UI elements from backend
+  async updateCartUI() {
+    if (!Auth.isLoggedIn()) {
+      const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
+      cartElements.forEach(element => {
+        element.textContent = '0';
+        element.style.display = 'none';
+      });
+      return;
     }
 
-    Storage.set('cart', cart);
-    this.updateCartUI();
-
-    // If user is logged in, also sync with backend
-    if (Auth.isLoggedIn()) {
-      try {
-        await API.addToCart(productId, quantity);
-      } catch (error) {
-        console.error('Failed to sync cart with backend:', error);
-      }
+    try {
+      const cart = await API.getCart();
+      const count = cart.reduce((total, item) => total + item.quantity, 0);
+      
+      const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
+      cartElements.forEach(element => {
+        element.textContent = count;
+        element.style.display = count > 0 ? 'block' : 'none';
+      });
+    } catch (error) {
+      console.error('Failed to update cart UI:', error);
+      const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
+      cartElements.forEach(element => {
+        element.textContent = '0';
+        element.style.display = 'none';
+      });
     }
-
-    return cart;
   },
 
-  // Remove item from cart
-  remove(productId) {
-    const cart = this.get().filter(item => item.productId !== productId);
-    Storage.set('cart', cart);
-    this.updateCartUI();
-    return cart;
-  },
-
-  // Update item quantity
-  updateQuantity(productId, quantity) {
-    const cart = this.get();
-    const item = cart.find(item => item.productId === productId);
-
-    if (item) {
-      if (quantity <= 0) {
-        this.remove(productId);
-      } else {
-        item.quantity = quantity;
-        Storage.set('cart', cart);
-        this.updateCartUI();
-      }
-    }
-
-    return cart;
-  },
-
-  // Get total items count
-  getItemCount() {
-    return this.get().reduce((total, item) => total + item.quantity, 0);
-  },
-
-  // Get total price
-  getTotal() {
-    const cart = this.get();
-    return cart.reduce((total, item) => {
-      const product = products.find(p => p.id === item.productId);
-      return total + (product ? product.price * item.quantity : 0);
-    }, 0);
-  },
-
-  // Clear cart
-  clear() {
-    Storage.remove('cart');
-    this.updateCartUI();
-  },
-
-  // Update cart UI elements
-  updateCartUI() {
-    const count = this.getItemCount();
+  // Clear cart UI only (backend clearing handled by API)
+  clearUI() {
     const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
     cartElements.forEach(element => {
-      element.textContent = count;
-      element.style.display = count > 0 ? 'block' : 'none';
+      element.textContent = '0';
+      element.style.display = 'none';
     });
   }
 };
 
 // Authentication Management
 const Auth = {
-  // Get current user
-  getCurrentUser() {
-    return JSON.parse(localStorage.getItem('currentUser'));
+  // Get current user from backend
+  async getCurrentUser() {
+    if (!this.isLoggedIn()) {
+      return null;
+    }
+
+    try {
+      const response = await API.getProfile();
+      return response.user;
+    } catch (error) {
+      console.error('Failed to get current user:', error);
+      // If we can't get user data, they're not properly authenticated
+      this.logout();
+      return null;
+    }
   },
 
   // Check if user is logged in - sync with API token
   isLoggedIn() {
     const hasToken = !!localStorage.getItem('authToken');
-    const hasUser = !!localStorage.getItem('currentUser');
     
     // Ensure API instance has the token
     if (hasToken && window.API) {
       window.API.token = localStorage.getItem('authToken');
     }
     
-    return hasToken && hasUser;
+    return hasToken;
   },
 
   // Logout user
   logout() {
-    localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
     if (window.API) {
       window.API.logout();
     }
-    Cart.clear();
+    Cart.clearUI();
   },
 
   // Show forgot password form
@@ -187,14 +149,8 @@ const Auth = {
   // Request password reset
   requestPasswordReset(email) {
     // Simple mock implementation for demo
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.email === email);
-
-    if (user) {
-      // In a real app, this would send an email
-      return true;
-    }
-    return false;
+    // In production, this would call an API endpoint
+    return true;
   }
 };
 
