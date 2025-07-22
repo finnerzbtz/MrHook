@@ -556,6 +556,18 @@ async function startServer() {
     
     await db.initTables();
     
+    // Ensure home_address column exists (fallback)
+    if (db.pool) {
+      try {
+        await db.query(`
+          ALTER TABLE users ADD COLUMN IF NOT EXISTS home_address TEXT
+        `);
+        console.log('✅ Ensured home_address column exists');
+      } catch (error) {
+        console.log('ℹ️ home_address column check:', error.message);
+      }
+    }
+    
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
       console.log(`🌐 Access your app at: http://localhost:${PORT}`);

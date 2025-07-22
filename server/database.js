@@ -7,13 +7,15 @@ class Database {
     const connectionString = process.env.DATABASE_URL;
     
     if (connectionString) {
-      // Use connection pooling for better performance
-      const poolUrl = connectionString.replace('.us-east-2', '-pooler.us-east-2');
+      // Use direct connection without pooler for better compatibility
       this.pool = new Pool({
-        connectionString: poolUrl,
-        max: 10,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 2000,
+        connectionString: connectionString,
+        max: 5,
+        idleTimeoutMillis: 60000,
+        connectionTimeoutMillis: 10000,
+        ssl: {
+          rejectUnauthorized: false
+        }
       });
       console.log('✅ Connected to PostgreSQL database');
     } else {
@@ -25,8 +27,33 @@ class Database {
   async initTables() {
     if (!this.pool) return;
 
+    // Retry database operations with backoff
+    const maxRetries = 3;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Database initialization attempt ${attempt}/${maxRetries}`);
+        await this.createTables();
+        console.log('✅ Database tables initialized');
+        await this.seedProducts();
+        return;
+      } catch (error) {
+        console.error(`❌ Database initialization attempt ${attempt} failed:`, error.message);
+        if (attempt === maxRetries) {
+          console.error('❌ All database initialization attempts failed');
+          throw error;
+        }
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+      }
+    }
+  }
+
+  async createTables() {
+    if (!this.pool) return;
+
     try {
-      // Create users table - simple as per brief
+      // Create users table - ensure home_address column exists
+      console.log('Creating users table...');
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
@@ -46,6 +73,7 @@ class Database {
       `);
 
       // Create products table
+      console.log('Creating products table...');
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS products (
           id SERIAL PRIMARY KEY,
@@ -61,6 +89,7 @@ class Database {
       `);
 
       // Create orders table - simple as per brief
+      console.log('Creating orders table...');
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS orders (
           id SERIAL PRIMARY KEY,
@@ -72,6 +101,7 @@ class Database {
       `);
 
       // Create order_items table
+      console.log('Creating order_items table...');
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS order_items (
           id SERIAL PRIMARY KEY,
@@ -83,6 +113,7 @@ class Database {
       `);
 
       // Create cart_items table for current shopping
+      console.log('Creating cart_items table...');
       await this.pool.query(`
         CREATE TABLE IF NOT EXISTS cart_items (
           id SERIAL PRIMARY KEY,
@@ -94,10 +125,9 @@ class Database {
         )
       `);
 
-      console.log('✅ Database tables initialized');
-      await this.seedProducts();
     } catch (error) {
-      console.error('❌ Database initialization failed:', error);
+      console.error('❌ Table creation failed:', error);
+      throw error;
     }
   }
 
