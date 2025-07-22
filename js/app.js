@@ -302,14 +302,21 @@ function hideLoadingScreen() {
   }
 }
 
-// Initialize app
+// Initialize application
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
+  console.log('🎣 Mr Hook Fishing Supplies - App Initializing...');
 
   try {
-    // Ensure API is available
-    if (typeof API === 'undefined' && typeof ApiService !== 'undefined') {
+    // Ensure API is available and properly configured
+    if (typeof API === 'undefined') {
+      console.log('Creating API instance...');
       window.API = new ApiService();
+    }
+
+    // Ensure API has the latest token
+    if (window.API && localStorage.getItem('authToken')) {
+      window.API.token = localStorage.getItem('authToken');
+      console.log('API token loaded:', !!window.API.token);
     }
 
     // Initialize components

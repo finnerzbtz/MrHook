@@ -8,8 +8,17 @@ class ApiService {
     this.token = localStorage.getItem('authToken');
   }
 
+  // Refresh token from localStorage
+  refreshToken() {
+    this.token = localStorage.getItem('authToken');
+  }
+
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}/api${endpoint}`;
+    
+    // Always get fresh token before making requests
+    this.refreshToken();
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -23,13 +32,24 @@ class ApiService {
     }
 
     try {
+      console.log(`Making API request: ${endpoint}`, { hasToken: !!this.token });
       const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+      
+      // Handle non-JSON responses (like HTML error pages)
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = { message: 'Server returned non-JSON response' };
       }
 
+      if (!response.ok) {
+        console.error('API request failed:', response.status, data);
+        throw new Error(data.message || `HTTP ${response.status}: API request failed`);
+      }
+
+      console.log(`API request successful: ${endpoint}`, data);
       return data;
     } catch (error) {
       console.error('API Error:', error);

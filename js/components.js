@@ -614,24 +614,37 @@ const BasketComponent = {
     const basketContent = document.getElementById('basketContent');
     const basketSummary = document.getElementById('basketSummary');
     
+    if (!basketContent || !basketSummary) {
+      console.error('Basket elements not found');
+      return;
+    }
+    
     // Load cart from API to ensure sync with backend
     let cart = [];
     try {
-      cart = await API.getCart();
-      // Sync local cart with backend
-      const localCart = cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity
-      }));
-      Storage.set('cart', localCart);
-      Cart.updateCartUI();
+      // Only try API if we have proper authentication
+      if (window.API && window.API.token) {
+        console.log('Loading cart from API...');
+        cart = await API.getCart();
+        console.log('Cart loaded from API:', cart.length, 'items');
+        
+        // Sync local cart with backend
+        const localCart = cart.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity
+        }));
+        Storage.set('cart', localCart);
+        Cart.updateCartUI();
+      } else {
+        throw new Error('No authentication token available');
+      }
     } catch (error) {
-      console.error('Failed to load cart:', error);
+      console.warn('Failed to load cart from API, using local data:', error);
       // Fallback to local cart
       cart = Cart.get().map(item => {
         const product = products.find(p => p.id === item.productId);
         return { ...item, product };
-      });
+      }).filter(item => item.product); // Remove items without valid products
     }
 
     if (cart.length === 0) {
@@ -746,6 +759,14 @@ const BasketComponent = {
     const user = Auth.getCurrentUser();
     if (!user) {
       Toast.show('Please login to place an order', 'error');
+      App.showPage('login');
+      return;
+    }
+
+    // Check if user is properly authenticated
+    if (!Auth.isLoggedIn()) {
+      Toast.show('Authentication expired. Please login again.', 'error');
+      App.showPage('login');
       return;
     }
 
@@ -756,17 +777,49 @@ const BasketComponent = {
     }
 
     try {
+      // Show loading state
+      const checkoutBtn = document.querySelector('.btn-checkout');
+      if (checkoutBtn) {
+        checkoutBtn.disabled = true;
+        checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
+      }
+
+      // Ensure API has the auth token
+      if (window.API && localStorage.getItem('authToken')) {
+        window.API.token = localStorage.getItem('authToken');
+      }
+
       // Create order via API
+      console.log('Creating order...', { userToken: !!window.API?.token, cartItems: cart.length });
       const response = await API.createOrder();
+      console.log('Order creation response:', response);
 
       // Clear cart after successful order
       Cart.clear();
 
       Toast.show('Order placed successfully! Thank you for your purchase.');
       App.showPage('home');
+
     } catch (error) {
       console.error('Order placement failed:', error);
-      Toast.show('Failed to place order. Please try again.', 'error');
+      
+      // Handle specific error types
+      if (error.message.includes('401') || error.message.includes('403')) {
+        Toast.show('Authentication expired. Please login again.', 'error');
+        Auth.logout();
+        App.showPage('login');
+      } else if (error.message.includes('Database not available')) {
+        Toast.show('Service temporarily unavailable. Please try again later.', 'error');
+      } else {
+        Toast.show('Failed to place order. Please try again.', 'error');
+      }
+    } finally {
+      // Reset button state
+      const checkoutBtn = document.querySelector('.btn-checkout');
+      if (checkoutBtn) {
+        checkoutBtn.disabled = false;
+        checkoutBtn.innerHTML = '<i class="fas fa-credit-card"></i> Complete Order';
+      }
     }
   }
 };

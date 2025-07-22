@@ -155,69 +155,27 @@ const Auth = {
     return JSON.parse(localStorage.getItem('currentUser'));
   },
 
-  // Login user
-  login(email, password) {
-    // In a real app, this would make an API call
-    const user = mockUsers.find(u => u.email === email && u.password === password);
-    if (user) {
-      const { password: _, ...userWithoutPassword } = user;
-      Storage.set('currentUser', userWithoutPassword);
-      return userWithoutPassword;
+  // Check if user is logged in - sync with API token
+  isLoggedIn() {
+    const hasToken = !!localStorage.getItem('authToken');
+    const hasUser = !!localStorage.getItem('currentUser');
+    
+    // Ensure API instance has the token
+    if (hasToken && window.API) {
+      window.API.token = localStorage.getItem('authToken');
     }
-    return null;
-  },
-
-  // Register user
-  register(userData) {
-    // In a real app, this would make an API call
-    const newUser = {
-      id: mockUsers.length + 1,
-      ...userData
-    };
-    mockUsers.push(newUser);
-    const { password: _, ...userWithoutPassword } = newUser;
-    Storage.set('currentUser', userWithoutPassword);
-    return userWithoutPassword;
-  },
-
-  // Update user profile
-  updateUser(updatedUser) {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const userIndex = users.findIndex(u => u.id === updatedUser.id);
-
-    if (userIndex !== -1) {
-      users[userIndex] = updatedUser;
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-      return updatedUser;
-    }
-    return null;
-  },
-
-  // Request password reset
-  requestPasswordReset(email) {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.email === email);
-
-    if (user) {
-      // In a real app, this would send an email
-      // For demo, we'll just show a success message
-      return true;
-    }
-    return false;
+    
+    return hasToken && hasUser;
   },
 
   // Logout user
   logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
-    API.logout();
+    if (window.API) {
+      window.API.logout();
+    }
     Cart.clear();
-  },
-
-  // Check if user is logged in
-  isLoggedIn() {
-    return !!localStorage.getItem('authToken') && !!localStorage.getItem('currentUser');
   },
 
   // Show forgot password form
@@ -226,65 +184,17 @@ const Auth = {
     App.showPage('reset');
   },
 
-  // Handle password reset request
-  resetPassword(event) {
-    event.preventDefault();
-
-    const email = document.getElementById('resetEmail').value;
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
+  // Request password reset
+  requestPasswordReset(email) {
+    // Simple mock implementation for demo
+    const users = JSON.parse(localStorage.getItem('users')) || [];
     const user = users.find(u => u.email === email);
 
-    if (!user) {
-      Toast.show('No account found with that email address', 'error');
-      return;
+    if (user) {
+      // In a real app, this would send an email
+      return true;
     }
-
-    // Simulate sending reset email
-    Toast.show('Password reset link sent to your email!');
-
-    // For demo purposes, immediately show the new password form
-    // In a real app, this would be handled via email link with token
-    setTimeout(() => {
-      localStorage.setItem('resetEmail', email);
-      App.showPage('newPassword');
-    }, 2000);
-  },
-
-  // Set new password
-  setNewPassword(event) {
-    event.preventDefault();
-
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmNewPassword').value;
-    const resetEmail = localStorage.getItem('resetEmail');
-
-    if (newPassword !== confirmPassword) {
-      Toast.show('Passwords do not match', 'error');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      Toast.show('Password must be at least 6 characters', 'error');
-      return;
-    }
-
-    // Update user password
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const userIndex = users.findIndex(u => u.email === resetEmail);
-
-    if (userIndex !== -1) {
-      users[userIndex].password = newPassword;
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.removeItem('resetEmail');
-
-      Toast.show('Password updated successfully!');
-
-      setTimeout(() => {
-        App.showPage('login');
-      }, 2000);
-    } else {
-      Toast.show('Error updating password', 'error');
-    }
+    return false;
   }
 };
 
