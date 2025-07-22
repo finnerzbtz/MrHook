@@ -640,9 +640,9 @@ const ProfileComponent = {
           <div class="order-items">
             ${order.items ? order.items.map(item => `
               <div class="order-product">
-                <span class="product-name">${escapeHtml(item.name || 'Product')}</span>
+                <span class="product-name">${escapeHtml(item.name || item.product?.name || 'Product')}</span>
                 <span class="product-quantity">Qty: ${item.quantity}</span>
-                <span class="product-subtotal">${formatPrice(item.subtotal || (item.price * item.quantity))}</span>
+                <span class="product-subtotal">${formatPrice(item.subtotal || (item.price || item.product?.price || 0) * item.quantity)}</span>
               </div>
             `).join('') : '<p>No items found</p>'}
           </div>

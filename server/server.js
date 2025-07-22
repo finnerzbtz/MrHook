@@ -579,6 +579,12 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
         ordersMap[row.id].items.push({
           productId: row.product_id,
           quantity: row.quantity,
+          subtotal: parseFloat(row.subtotal) || 0,
+          name: row.name,
+          type: row.type,
+          price: parseFloat(row.price),
+          image: row.image,
+          description: row.description,
           product: {
             id: row.product_id,
             name: row.name,
