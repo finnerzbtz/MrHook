@@ -1,0 +1,104 @@
+Replit Case Study: Online Shopping with “Mr. Hook”
+Client Briefing
+Context: Our Client, “Mr Hook”, is the owner of a local Fishing supplies store in the UK and has experienced a sharp decline in the number of customers visiting his premises due to the Global Pandemic. To build an alternative sales funnel, he reached out to us to help him sell his products online. He wants us to use Replit to launch his MVP as a desktop as well as mobile version in the upcoming weeks.
+User Journey: Users will need an account to add items to their basket. Users will sign up to the website, then browse the list of products and add any number and combination of products to their basket. Users can then review and modify their basket before finally placing the order. You do not need to build out a payments system, simply mark the order as “completed” and prevent further changes to it. A user should be able to place multiple orders.
+Company Guidelines:
+Logo: You can use the Replit logo
+Main Font: Arial
+Colours:
+Main: Dark Blue - #324380
+Highlights: Orange - #FF5A08
+
+Note: Please bear in mind that this is a fictive client. There is no need to perform additional research about the company guidelines or design since all relevant information is outlined in the briefing. 
+
+
+
+
+
+
+
+
+
+
+
+Project Outline
+Database
+The app must store key information about products and users, as well as keeping track of all orders a user has made
+User:
+First Name
+Last Name
+Home Address
+Email
+Product:
+Name
+Price
+Description
+Image
+Type (Option Set)
+Order:
+User
+Order Items
+Order Placed?
+Date Ordered
+Total Price
+Order Item:
+Product
+Order
+Quantity
+Subtotal
+Option Set - Product Types:
+Fishing Rods
+Hooks
+Bait
+Containers
+Other
+Site Header
+Please create a Site Header that is both Desktop and Mobile Responsive, it must be a reusable element and have these features:
+Company Logo on the left
+On the right side there should be a “burger menu” showing the options “Products”, “Profile”, “Basket” and “Logout” for Users that are logged in
+Users that are logged out should instead see “Products” and “Login”
+The Header should be present on all pages across the site
+Login/Signup Page (No Pop-ups)
+Please create a Login/Signup page that is both Desktop and Mobile Responsive, it must have these features:
+Login: The User must both be able to Login to their account or request a password reset
+Signup: The User needs to enter their details, which are then saved into the Database, the required details are:
+First Name
+Last Name
+Address
+Email
+When a user is logged in, they are redirected back to the “Index”
+
+
+Products Page (Index)
+Please create a Products page that is both Desktop and Mobile Responsive, it must have these features:
+Products list: There should be a list of all products, showing the Image, Name Type and Price of each product.
+Filters: There should be a search filters section which allows a user to refine the list of products. The Filters should be:
+Name
+Product Type
+Price Range
+Product details: When a product is clicked, the search should be replaced with details of the product, showing the Image, Name, Description, Type and price of the chosen product. There should be an “Add to basket” button and a quantity selector that adds the chosen item to the user’s current Order. There should also be a “Back to search” button that hides this screen and displays the list of products again.
+Profile Page
+Please create a Profile page that is both Desktop and Mobile Responsive, it must have these features:
+Personal Details: The page should display the user’s name, email and home address, as well as provide the ability to edit this information. Email change should be verified via an email
+Orders: There should be a list of orders the user has successfully placed, with the most recent first one first. Each order should show a full list of products bought along with their quantities, subtotals and total price.
+
+
+
+Basket Page
+Please create a Basket page that is both Desktop and Mobile Responsive, it must have these features:
+My Basket: The page should display a list of all items in the user’s current order along with the subtotals & total. The user should be able to remove items from the order and modify the quantity of each - The price displays should update to reflect this
+Place Order: There should be a button that finalises the user’s order. When the user clicks this, it should save the order as complete and create a new one for the user to start filling out again. Feedback should be displayed on screen so the user knows that their order has been placed, then the user should be sent back to “Index”
+Privacy Rules
+The Database elements should have appropriate privacy rules applied to them, so that only relevant users have access to certain data.
+A user should only be able to see their own orders
+A user should only be able to see their own personal details
+Anyone should be able to see the details of a product
+Project Submission + Next Steps
+Once you have completed the case study, please add samir@millionlabs.co.uk as a collaborator. 
+Simply go to “Settings” -> “Collaborators” and then send an email to verena@millionlabs.co.uk, letting her know that you’ve completed the assignment
+If you get selected for the next round, you will have an interview with one of our tech team members who will give feedback on your project and ask some more questions about Replit as well as the features you would like to learn with us. 
+
+
+Good luck with your project! 
+
+We look forward to hearing from you.
