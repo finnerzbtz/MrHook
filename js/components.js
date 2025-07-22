@@ -698,7 +698,7 @@ const BasketComponent = {
       return;
     }
 
-    const cart = Cart.getItems();
+    const cart = Cart.get();
     if (cart.length === 0) {
       Toast.show('Your basket is empty', 'error');
       return;
