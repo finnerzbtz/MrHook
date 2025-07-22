@@ -250,43 +250,75 @@ const ProductsComponent = {
 
 // Filter by category from category cards - backend driven
 async function filterByCategory(categoryType) {
-  const searchInput = document.getElementById('searchInput');
-  const categoryFilter = document.getElementById('categoryFilter');
-  const priceRange = document.getElementById('priceRange');
-  const priceValue = document.getElementById('priceValue');
+  console.log('🎯 Filtering by category:', categoryType);
+  
+  try {
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const priceRange = document.getElementById('priceRange');
+    const priceValue = document.getElementById('priceValue');
 
-  // Reset other filters first
-  if (searchInput) searchInput.value = '';
-  if (priceRange) priceRange.value = '200';
-  if (priceValue) priceValue.textContent = '200';
+    // Reset other filters first
+    if (searchInput) searchInput.value = '';
+    if (priceRange) priceRange.value = '200';
+    if (priceValue) priceValue.textContent = '200';
 
-  // Set category filter based on the category type - match backend categories exactly
-  let filterValue = '';
-  switch(categoryType) {
-    case 'fishing-rods':
-      filterValue = 'rods';  // Backend uses 'rods' not 'fishing-rods'
-      break;
-    case 'bait-hooks':
-      // For combined category, use search to find both bait and hooks
-      filterValue = '';
-      if (searchInput) searchInput.value = 'bait hooks';
-      break;
-    case 'containers-more':
-      // For combined category, use search to find containers and other
-      filterValue = '';
-      if (searchInput) searchInput.value = 'containers other';
-      break;
-    default:
-      filterValue = '';
+    // Set the appropriate filter based on category type
+    switch(categoryType) {
+      case 'fishing-rods':
+        // Filter by 'rods' category
+        if (categoryFilter) categoryFilter.value = 'rods';
+        console.log('👉 Filtering by rods category');
+        break;
+        
+      case 'bait-hooks':
+        // Use search to find bait and hooks
+        if (searchInput) searchInput.value = 'bait';
+        if (categoryFilter) categoryFilter.value = '';
+        console.log('👉 Searching for bait and hooks');
+        break;
+        
+      case 'containers-more':
+        // Filter by containers category (most relevant items)
+        if (categoryFilter) categoryFilter.value = 'containers';
+        console.log('👉 Filtering by containers category');
+        break;
+        
+      default:
+        // Clear all filters
+        if (categoryFilter) categoryFilter.value = '';
+        console.log('👉 Clearing all filters');
+    }
+
+    // Apply the filters
+    await ProductsComponent.applyFilters();
+    console.log('✅ Filters applied successfully');
+
+    // Scroll to products section with a small delay
+    setTimeout(() => {
+      console.log('📜 Scrolling to products section...');
+      const element = document.getElementById('productsSection');
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+        console.log('✅ Scrolled to products section');
+      } else {
+        console.error('❌ Products section not found');
+      }
+    }, 100);
+    
+    // Show success feedback
+    setTimeout(() => {
+      const count = ProductsComponent.filteredProducts.length;
+      Toast.show(`Found ${count} products`, 'success', 2000);
+    }, 200);
+    
+  } catch (error) {
+    console.error('❌ Error in filterByCategory:', error);
+    Toast.show('Failed to filter products', 'error');
   }
-
-  if (categoryFilter) categoryFilter.value = filterValue;
-
-  // Apply the filter using backend
-  await ProductsComponent.applyFilters();
-
-  // Scroll to products section
-  smoothScrollTo('productsSection');
 }
 
 // Close product modal
@@ -295,17 +327,6 @@ function closeProductModal() {
   if (modal) {
     modal.classList.remove('active');
     document.body.style.overflow = '';
-  }
-}
-
-// Global utility function for smooth scrolling
-function smoothScrollTo(targetId) {
-  const element = document.getElementById(targetId);
-  if (element) {
-    element.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
   }
 }
 
