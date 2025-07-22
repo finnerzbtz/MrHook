@@ -158,6 +158,7 @@
   padding: var(--space-3);
   background: transparent;
   border: none;
+  font-family: var(--font-family);
   font-weight: 500;
   color: var(--gray-600);
   cursor: pointer;
