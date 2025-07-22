@@ -274,7 +274,7 @@ const ProductsComponent = {
                 </button>
                 <button class="btn btn-outline" onclick="App.showPage('home')">
                   <i class="fas fa-arrow-left"></i>
-                  Continue Shopping
+                  Back to search
                 </button>
               </div>
             </div>
