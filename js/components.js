@@ -111,7 +111,7 @@ const ProductsComponent = {
     const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
 
     Cart.add(productId, quantity);
-    
+
     const product = products.find(p => p.id === productId);
     Toast.show(`${product.name} added to basket!`);
 
@@ -142,7 +142,7 @@ const ProductsComponent = {
     document.getElementById('categoryFilter').value = '';
     document.getElementById('priceRange').value = '200';
     document.getElementById('priceValue').textContent = '200';
-    
+
     this.filteredProducts = products;
     this.render();
   }
@@ -154,12 +154,12 @@ function filterByCategory(categoryType) {
   const categoryFilter = document.getElementById('categoryFilter');
   const priceRange = document.getElementById('priceRange');
   const priceValue = document.getElementById('priceValue');
-  
+
   // Reset filters first
   searchInput.value = '';
   priceRange.value = '200';
   priceValue.textContent = '200';
-  
+
   // Set category filter based on the category type
   switch(categoryType) {
     case 'fishing-rods':
@@ -188,10 +188,10 @@ function filterByCategory(categoryType) {
     default:
       categoryFilter.value = '';
   }
-  
+
   // Apply the filter
   ProductsComponent.applyFilters();
-  
+
   // Scroll to products section
   smoothScrollTo('productsSection');
 }
@@ -201,7 +201,7 @@ const AuthComponent = {
   // Handle login form
   handleLogin(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
@@ -228,7 +228,7 @@ const AuthComponent = {
   // Handle signup form
   handleSignup(event) {
     event.preventDefault();
-    
+
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
@@ -258,7 +258,7 @@ const AuthComponent = {
 
     const userData = { firstName, lastName, email, address, password };
     const user = Auth.register(userData);
-    
+
     if (user) {
       Toast.show(`Account created successfully! Welcome, ${user.firstName}!`);
       App.updateAuthUI();
@@ -296,7 +296,7 @@ const AuthComponent = {
     const modal = document.getElementById('passwordResetModal');
     modal.classList.remove('active');
     document.body.style.overflow = '';
-    
+
     // Reset form
     document.getElementById('passwordResetForm').reset();
   },
@@ -304,9 +304,9 @@ const AuthComponent = {
   // Handle password reset
   handlePasswordReset(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('resetEmail').value.trim();
-    
+
     if (!email) {
       Toast.show('Please enter your email address', 'error');
       return;
@@ -318,7 +318,7 @@ const AuthComponent = {
     }
 
     const success = Auth.requestPasswordReset(email);
-    
+
     if (success) {
       Toast.show('Password reset link sent to your email!');
       AuthComponent.closePasswordReset();
@@ -430,7 +430,7 @@ const ProfileComponent = {
   renderOrders(container, user) {
 
     const userOrders = mockOrders.filter(order => order.userId === user.id);
-    
+
     if (userOrders.length === 0) {
       container.innerHTML = `
         <div class="no-orders">
@@ -480,7 +480,7 @@ const ProfileComponent = {
   // Handle profile update
   handleProfileUpdate(event) {
     event.preventDefault();
-    
+
     const firstName = document.getElementById('editFirstName').value.trim();
     const lastName = document.getElementById('editLastName').value.trim();
     const email = document.getElementById('editEmail').value.trim();
@@ -639,7 +639,7 @@ const BasketComponent = {
     // Simulate order processing
     const total = Cart.getTotal();
     const user = Auth.getCurrentUser();
-    
+
     // Create new order
     const newOrder = {
       id: mockOrders.length + 1,
@@ -685,11 +685,11 @@ const VideoHoverComponent = {
   init() {
     // Check if device is mobile/tablet
     const isMobile = window.innerWidth <= 768;
-    
+
     document.querySelectorAll('.category-card').forEach(card => {
       const video = card.querySelector('.category-video');
       const image = card.querySelector('.category-image');
-      
+
       if (!video || !image) return;
 
       if (isMobile) {
@@ -771,4 +771,4 @@ const VideoHoverComponent = {
     video.classList.remove('playing');
     image.classList.remove('hidden');
   }
-}; 
+};
