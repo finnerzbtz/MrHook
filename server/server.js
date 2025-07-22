@@ -475,10 +475,17 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       return sum + (parseFloat(item.price) * item.quantity);
     }, 0);
 
+    // Get the next user order number
+    const userOrderCountResult = await db.query(
+      'SELECT COUNT(*) + 1 as next_order_number FROM orders WHERE user_id = $1',
+      [req.user.id]
+    );
+    const userOrderNumber = parseInt(userOrderCountResult.rows[0].next_order_number);
+
     // Create order
     const orderResult = await db.query(
-      'INSERT INTO orders (user_id, order_placed, total_price, date_ordered) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING *',
-      [req.user.id, true, total]
+      'INSERT INTO orders (user_id, user_order_number, order_placed, total_price, date_ordered) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *',
+      [req.user.id, userOrderNumber, true, total]
     );
     const order = orderResult.rows[0];
 
@@ -542,7 +549,8 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     const ordersResult = await db.query(`
       SELECT 
         o.id, 
-        o.user_id, 
+        o.user_id,
+        o.user_order_number,
         o.order_placed, 
         COALESCE(o.date_ordered, o.created_at) as date_ordered,
         o.total_price,
@@ -566,7 +574,8 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     ordersResult.rows.forEach(row => {
       if (!ordersMap[row.id]) {
         ordersMap[row.id] = {
-          id: row.id,
+          id: row.user_order_number || row.id, // Use user order number for display
+          globalId: row.id, // Keep global ID for internal use
           userId: row.user_id,
           total: parseFloat(row.total_price),
           status: 'completed',
@@ -924,20 +933,4 @@ async function startServer() {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
-      console.log(`🌐 Access your app at: http://localhost:${PORT}`);
-      console.log(`📊 Database: ${db.pool ? 'PostgreSQL Connected' : 'In-memory fallback'}`);
-
-      if (!db.pool) {
-        console.log('⚠️  To enable database features:');
-        console.log('   1. Open Database tab in Replit');
-        console.log('   2. Click "Create a database"');
-        console.log('   3. Restart the server');
-      }
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
+      console.log(`

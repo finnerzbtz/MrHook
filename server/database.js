@@ -94,6 +94,7 @@ class Database {
         CREATE TABLE IF NOT EXISTS orders (
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id),
+          user_order_number INTEGER,
           order_placed BOOLEAN DEFAULT FALSE,
           date_ordered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           total_price DECIMAL(10,2) NOT NULL
@@ -175,6 +176,16 @@ class Database {
         console.log('✅ Ensured created_at column exists in orders table');
       } catch (error) {
         console.log('ℹ️ Created at column:', error.message);
+      }
+
+      // Ensure user_order_number exists for per-user order numbering
+      try {
+        await this.pool.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_order_number INTEGER
+        `);
+        console.log('✅ Ensured user_order_number column exists in orders table');
+      } catch (error) {
+        console.log('ℹ️ User order number column:', error.message);
       }
 
     } catch (error) {
