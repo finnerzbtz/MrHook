@@ -1,0 +1,77 @@
+## 1. Fixing the XSS Vulnerabilities (High Priority)
+The core principle here is to stop using innerHTML to insert data into the DOM. Instead, you'll create HTML elements and set their content using the safe textContent property. This ensures that any data is treated as plain text and not as executable HTML.
+
+Let's go through one of the most complex examples from js/components.js: the product detail page.
+
+Example Fix: Product Detail Page
+Here is a safe way to rewrite the container.innerHTML block for displaying product details.
+
+File: js/components.js
+
+Original (Vulnerable) Code:
+
+JavaScript
+
+      container.innerHTML = `
+        <div class="product-detail-layout">
+          <div class="product-detail-image-section">
+            <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
+          </div>
+          // ... and so on
+        </div>
+      `;
+New (Safe) Code:
+
+Instead of building a giant HTML string, you will create each element programmatically. It's more verbose, but it's completely safe from XSS.
+
+JavaScript
+
+// Clear the container first
+container.innerHTML = '';
+
+// Create the main layout div
+const layoutDiv = document.createElement('div');
+layoutDiv.className = 'product-detail-layout';
+
+// --- Image Section ---
+const imageSection = document.createElement('div');
+imageSection.className = 'product-detail-image-section';
+const img = document.createElement('img');
+img.src = product.image; // Setting .src is safe. The browser won't execute JS from here.
+img.alt = product.name;  // Setting .alt is also safe.
+img.className = 'product-detail-image';
+imageSection.appendChild(img);
+
+// --- Info Section ---
+const infoSection = document.createElement('div');
+infoSection.className = 'product-detail-info-section';
+
+const nameH1 = document.createElement('h1');
+nameH1.className = 'product-detail-name';
+nameH1.textContent = product.name; // Use textContent, not innerHTML
+
+const categoryP = document.createElement('p');
+categoryP.className = 'product-detail-category';
+categoryP.textContent = formatCategory(product.category || product.type);
+
+const priceDiv = document.createElement('div');
+priceDiv.className = 'product-detail-price';
+priceDiv.textContent = formatPrice(product.price);
+
+// ... and so on for the description, actions, etc.
+
+// --- Assemble the pieces ---
+infoSection.appendChild(nameH1);
+infoSection.appendChild(categoryP);
+infoSection.appendChild(priceDiv);
+// ... append other elements to infoSection
+
+layoutDiv.appendChild(imageSection);
+layoutDiv.appendChild(infoSection);
+
+container.appendChild(layoutDiv);
+You'll need to apply this same pattern to all the other instances where innerHTML is used in js/components.js and js/utils.js.
+
+For simple text: Replace element.innerHTML = someVariable; with element.textContent = someVariable;.
+
+For lists (like the orders and basket): Loop through your data array (.map()), and in each iteration, create the elements, set their textContent, and appendChild() them to the parent.
