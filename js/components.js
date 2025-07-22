@@ -284,8 +284,9 @@ const ProductsComponent = {
 
       console.log('Product detail content populated');
       
-      // Show the product detail page
+      // Show the product detail page and scroll to top
       App.showPage('productDetail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       
     } catch (error) {
       console.error('Error loading product detail:', error);

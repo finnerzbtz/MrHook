@@ -1044,7 +1044,7 @@
 /* Product Detail Page - PROPER LAYOUT WITH HEADER */
 .product-detail-page {
   display: none;
-  padding: 0;
+  padding: var(--space-4) 0 0 0; /* Add some top padding for breathing room */
   margin: 0;
   min-height: calc(100vh - 80px); /* Account for header height */
 }
@@ -1058,33 +1058,12 @@
 
 
 
-.product-detail-header {
-  background: var(--white);
-  padding: var(--space-4) var(--space-6);
-  border-bottom: 1px solid var(--gray-200);
-  position: sticky;
-  top: 80px; /* Below main header */
-  z-index: 100;
-}
-
-.product-detail-header h2 {
-  margin: 0;
-  color: var(--gray-900);
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-}
-
-.back-to-products {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 600;
-}
+/* Product detail header removed - content moved up */
 
 .product-detail-layout {
   display: grid;
   grid-template-columns: 1fr 1fr; /* True 50/50 split */
-  min-height: calc(100vh - 160px); /* Account for main header + detail header */
+  min-height: calc(100vh - 100px); /* Account for main header only */
   width: 100vw;
   margin: 0;
 }
