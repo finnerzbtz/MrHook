@@ -1162,151 +1162,6 @@ function closeProductModal() {
   }
 }
 
-// Authentication Component
-const AuthComponent = {
-  // Handle login form
-  async handleLogin(event) {
-    event.preventDefault();
-
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) {
-      Toast.show('Please fill in all fields', 'error');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      Toast.show('Please enter a valid email address', 'error');
-      return;
-    }
-
-    try {
-      const response = await API.login(email, password);
-
-      const userName = response.user.firstName || response.user.first_name || 'User';
-      Toast.show(`Welcome back, ${userName}!`);
-      App.updateAuthUI();
-      App.showPage('home');
-    } catch (error) {
-      console.error('Login error:', error);
-      Toast.show(error.message || 'Invalid email or password', 'error');
-    }
-  },
-
-  // Handle signup form
-  async handleSignup(event) {
-    event.preventDefault();
-
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const homeAddress = document.getElementById('homeAddress').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    if (!firstName || !lastName || !email || !homeAddress || !password || !confirmPassword) {
-      Toast.show('Please fill in all fields', 'error');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Toast.show('Passwords do not match', 'error');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      Toast.show('Please enter a valid email address', 'error');
-      return;
-    }
-
-    if (password.length < 6) {
-      Toast.show('Password must be at least 6 characters long', 'error');
-      return;
-    }
-
-    try {
-      const userData = { 
-        firstName, 
-        lastName, 
-        email, 
-        homeAddress,
-        password 
-      };
-      
-      const response = await API.register(userData);
-      
-      Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
-      App.updateAuthUI();
-      App.showPage('home');
-    } catch (error) {
-      console.error('Registration error:', error);
-      Toast.show(error.message || 'Error creating account. Please try again.', 'error');
-    }
-  },
-
-  // Switch between login and signup tabs
-  switchTab(tab) {
-    const tabs = document.querySelectorAll('.auth-tab');
-    const forms = document.querySelectorAll('.auth-form');
-
-    tabs.forEach(t => t.classList.remove('active'));
-    forms.forEach(f => f.classList.remove('active'));
-
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-    document.getElementById(`${tab}Form`).classList.add('active');
-  },
-
-  // Show password reset modal
-  showPasswordReset() {
-    const modal = document.getElementById('passwordResetModal');
-    if (modal) {
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-
-      // Add form listener
-      const form = document.getElementById('passwordResetForm');
-      if (form) {
-        form.addEventListener('submit', this.handlePasswordReset);
-      }
-    }
-  },
-
-  // Close password reset modal
-  closePasswordReset() {
-    const modal = document.getElementById('passwordResetModal');
-    if (modal) {
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
-
-      // Reset form
-      const form = document.getElementById('passwordResetForm');
-      if (form) form.reset();
-    }
-  },
-
-  // Handle password reset
-  handlePasswordReset(event) {
-    event.preventDefault();
-
-    const email = document.getElementById('resetEmail')?.value.trim();
-
-    if (!email) {
-      Toast.show('Please enter your email address', 'error');
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      Toast.show('Please enter a valid email address', 'error');
-      return;
-    }
-
-    // For demo purposes, just show success message
-    Toast.show('Password reset link sent to your email!');
-    AuthComponent.closePasswordReset();
-  }
-};
-
 // Profile Component
 const ProfileComponent = {
   isEditing: false,
@@ -1903,3 +1758,25 @@ const VideoHoverComponent = {
     image.classList.remove('hidden');
   }
 };
+
+// CRITICAL: Export functions globally for onclick handlers and component access
+window.ProductsComponent = {
+  init: ProductsComponent.init.bind(ProductsComponent),
+  loadProducts: ProductsComponent.loadProducts.bind(ProductsComponent),
+  showProductDetail: ProductsComponent.showProductDetail.bind(ProductsComponent),
+  updateQuantity: ProductsComponent.updateQuantity.bind(ProductsComponent),
+  addToCart: ProductsComponent.addToCart.bind(ProductsComponent),
+  resetFilters: ProductsComponent.resetFilters.bind(ProductsComponent),
+  applyFilters: ProductsComponent.applyFilters.bind(ProductsComponent)
+};
+
+window.AuthComponent = AuthComponent;
+window.ProfileComponent = ProfileComponent;
+window.BasketComponent = BasketComponent;
+window.VideoHoverComponent = VideoHoverComponent;
+
+// Global utility functions
+window.closeProductModal = closeProductModal;
+window.filterByCategory = filterByCategory;
+
+console.log('✅ All global functions exposed successfully!');
