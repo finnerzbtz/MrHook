@@ -328,6 +328,10 @@
   transform: scale(1.05);
 }
 
+.logo-image {
+  animation: float 3s ease-in-out infinite;
+}
+
 .logo-icon {
   animation: float 3s ease-in-out infinite;
 }

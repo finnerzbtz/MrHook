@@ -2,118 +2,58 @@
 
 // CRITICAL: Expose functions globally IMMEDIATELY for onclick handlers
 window.testCategoryClick = function(category) {
-  console.log('🧪 TEST: Button click detected for category:', category);
+  console.log('Button click detected for category:', category);
   alert(`Button clicked for: ${category}`);
 }
 
 // Filter by category from category cards - backend driven
 async function filterByCategory(categoryType) {
-  console.log('🎯 DEBUG: Starting filterByCategory with:', categoryType);
-  console.log('🚨 BUTTON CLICK DETECTED! Function is working!');
-  
   try {
+    // Get form elements
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
 
-    console.log('🔍 DEBUG: Found form elements:', {
-      searchInput: !!searchInput,
-      categoryFilter: !!categoryFilter,
-      priceRange: !!priceRange,
-      priceValue: !!priceValue
-    });
-
-    // Reset other filters first
-    if (searchInput) searchInput.value = '';
-    if (priceRange) priceRange.value = '200';
-    if (priceValue) priceValue.textContent = '200';
-
-    // Set the appropriate filter based on category type
-    switch(categoryType) {
-      case 'fishing-rods':
-        // Filter by 'rods' category
-        if (categoryFilter) {
-          categoryFilter.value = 'rods';
-          console.log('✅ DEBUG: Set category filter to "rods"');
-        }
-        break;
-        
-      case 'bait-hooks':
-        // Use search to find bait and hooks
-        if (searchInput) {
-          searchInput.value = 'bait';
-          console.log('✅ DEBUG: Set search to "bait"');
-        }
-        if (categoryFilter) categoryFilter.value = '';
-        break;
-        
-      case 'containers-more':
-        // Filter by containers category
-        if (categoryFilter) {
-          categoryFilter.value = 'containers';
-          console.log('✅ DEBUG: Set category filter to "containers"');
-        }
-        break;
-        
-      default:
-        // Clear all filters
-        if (categoryFilter) categoryFilter.value = '';
-        console.log('✅ DEBUG: Cleared all filters');
+    if (!searchInput || !categoryFilter || !priceRange || !priceValue) {
+      console.error('Filter form elements not found');
+      return;
     }
 
-    // Show current form values
-    console.log('📋 DEBUG: Current form values:', {
-      search: searchInput?.value || '',
-      category: categoryFilter?.value || '',
-      price: priceRange?.value || ''
-    });
+    // Clear all filters first
+    searchInput.value = '';
+    priceRange.value = '200';
+    priceValue.textContent = '200';
+
+    // Set appropriate filter based on category
+    if (categoryType === 'fishing-rods') {
+      categoryFilter.value = 'rods';
+    } else if (categoryType === 'bait-hooks') {
+      // For combined category, use search approach
+      searchInput.value = 'bait';
+      categoryFilter.value = '';
+    } else if (categoryType === 'containers-more') {
+      categoryFilter.value = 'containers';
+    } else {
+      // Clear all filters for unknown category
+      categoryFilter.value = '';
+    }
 
     // Apply the filters
-    console.log('⚙️ DEBUG: About to call applyFilters...');
     await ProductsComponent.applyFilters();
-    
-    console.log('📊 DEBUG: After applyFilters - Product counts:', {
-      allProducts: ProductsComponent.allProducts.length,
-      filteredProducts: ProductsComponent.filteredProducts.length
-    });
 
-    // Log the actual products returned
-    console.log('📦 DEBUG: Filtered products:', ProductsComponent.filteredProducts.map(p => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      type: p.type
-    })));
+    // Scroll to products section
+    const productsSection = document.getElementById('productsSection');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth' });
+    }
 
-    // Force a re-render to make sure UI updates
-    console.log('🎨 DEBUG: Forcing render...');
-    ProductsComponent.render();
+    // Show feedback toast
+    const count = ProductsComponent.filteredProducts.length;
+    Toast.show(`Found ${count} products`, 'info');
 
-    // Scroll to products section with a small delay
-    setTimeout(() => {
-      console.log('📜 DEBUG: Attempting to scroll to products section...');
-      const element = document.getElementById('productsSection');
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-        console.log('✅ DEBUG: Scrolled to products section');
-      } else {
-        console.error('❌ DEBUG: Products section element not found!');
-      }
-    }, 200);
-    
-    // Show success feedback
-    setTimeout(() => {
-      const count = ProductsComponent.filteredProducts.length;
-      console.log(`📢 DEBUG: Showing toast with count: ${count}`);
-      Toast.show(`Found ${count} products`, 'success', 3000);
-    }, 300);
-    
   } catch (error) {
-    console.error('❌ DEBUG: Error in filterByCategory:', error);
+    console.error('Error in filterByCategory:', error);
     Toast.show('Failed to filter products', 'error');
   }
 }
@@ -135,10 +75,10 @@ const ProductsComponent = {
 
   // Load products from backend API
   async loadProducts(filters = {}) {
-    console.log('🔄 DEBUG: loadProducts called with filters:', filters);
+    console.log('loadProducts called with filters:', filters);
     
     if (this.isLoading) {
-      console.log('⏳ DEBUG: Already loading, skipping...');
+      console.log('Already loading, skipping...');
       return;
     }
     
@@ -146,25 +86,25 @@ const ProductsComponent = {
     this.showLoadingState();
 
     try {
-      console.log('📡 DEBUG: About to call API.getProducts...');
+      console.log('About to call API.getProducts...');
       this.allProducts = await API.getProducts(filters);
       this.filteredProducts = this.allProducts;
       
-      console.log('✅ DEBUG: Products loaded successfully:', {
+      console.log('Products loaded successfully:', {
         count: this.allProducts.length,
         products: this.allProducts.map(p => ({ id: p.id, name: p.name, category: p.category }))
       });
       
-      console.log('🎨 DEBUG: About to render products...');
+      console.log('About to render products...');
       this.render();
-      console.log('✅ DEBUG: Render complete');
+      console.log('Render complete');
       
     } catch (error) {
-      console.error('❌ DEBUG: Failed to load products:', error);
+      console.error('Failed to load products:', error);
       this.showErrorState('Failed to load products. Please refresh the page.');
     } finally {
       this.isLoading = false;
-      console.log('🔚 DEBUG: loadProducts finished, isLoading = false');
+      console.log('loadProducts finished, isLoading = false');
     }
   },
 
@@ -201,21 +141,21 @@ const ProductsComponent = {
 
   // Render products grid
   render() {
-    console.log('🎨 DEBUG: render() called');
+    console.log('render() called');
     
     const grid = document.getElementById('productsGrid');
     if (!grid) {
-      console.error('❌ DEBUG: productsGrid element not found!');
+      console.error('productsGrid element not found!');
       return;
     }
     
-    console.log('📊 DEBUG: About to render products:', {
+    console.log('About to render products:', {
       filteredProducts: this.filteredProducts.length,
       isLoading: this.isLoading
     });
 
     if (this.filteredProducts.length === 0 && !this.isLoading) {
-      console.log('📭 DEBUG: No products to show, displaying no-products message');
+      console.log('No products to show, displaying no-products message');
       grid.innerHTML = `
         <div class="no-products">
           <i class="fas fa-fish" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
@@ -229,7 +169,7 @@ const ProductsComponent = {
       return;
     }
 
-    console.log('🏗️ DEBUG: Building product cards HTML...');
+    console.log('Building product cards HTML...');
     
     const productCards = this.filteredProducts.map((product, index) => {
       const card = `
@@ -242,49 +182,49 @@ const ProductsComponent = {
           </div>
         </div>
       `;
-      console.log(`📦 DEBUG: Created card for product ${product.id}: ${product.name}`);
+      console.log(`Created card for product ${product.id}: ${product.name}`);
       return card;
     });
     
     grid.innerHTML = productCards.join('');
-    console.log(`✅ DEBUG: Set grid innerHTML with ${productCards.length} cards`);
+    console.log(`Set grid innerHTML with ${productCards.length} cards`);
 
     // Add click listeners to product cards
     const cards = grid.querySelectorAll('.product-card');
-    console.log(`🖱️ DEBUG: Adding click listeners to ${cards.length} cards`);
+    console.log(`Adding click listeners to ${cards.length} cards`);
     
     cards.forEach(card => {
       card.addEventListener('click', () => {
         const productId = parseInt(card.dataset.productId);
-        console.log(`🖱️ DEBUG: Product card clicked: ${productId}`);
+        console.log(`Product card clicked: ${productId}`);
         this.showProductDetail(productId);
       });
     });
 
     // Trigger animation
     setTimeout(() => {
-      console.log('🎬 DEBUG: Triggering animations...');
+      console.log('Triggering animations...');
       grid.querySelectorAll('.product-card').forEach((card, index) => {
         setTimeout(() => card.classList.add('fade-in'), index * 100);
       });
-      console.log('✨ DEBUG: Animations triggered');
+      console.log('Animations triggered');
     }, 100);
     
-    console.log('🎉 DEBUG: render() completed successfully');
+    console.log('render() completed successfully');
   },
 
   // Show product detail page
   async showProductDetail(productId) {
     try {
-      console.log('🔍 DEBUG: Loading product detail page for product:', productId);
+      console.log('Loading product detail page for product:', productId);
       
       // Get product details from backend
       const product = await API.getProduct(productId);
-      console.log('📦 DEBUG: Product loaded:', product.name);
+      console.log('Product loaded:', product.name);
 
       const container = document.getElementById('productDetailContent');
       if (!container) {
-        console.error('❌ DEBUG: Product detail container not found!');
+        console.error('Product detail container not found!');
         return;
       }
 
@@ -293,7 +233,7 @@ const ProductsComponent = {
       if (productDetailPage) {
         // Clear any previous inline styles that might be blocking
         productDetailPage.style.cssText = '';
-        console.log('🎯 DEBUG: Cleared any blocking inline styles');
+        console.log('Cleared any blocking inline styles');
       }
 
       // Populate product detail page with forced full-width grid
@@ -357,13 +297,13 @@ const ProductsComponent = {
         </div>
       `;
 
-      console.log('✅ DEBUG: Product detail content populated');
+      console.log('Product detail content populated');
       
       // Show the product detail page
       App.showPage('productDetail');
       
     } catch (error) {
-      console.error('❌ Error loading product detail:', error);
+      console.error('Error loading product detail:', error);
       Toast.show('Failed to load product details', 'error');
     }
   },
@@ -608,7 +548,7 @@ const AuthComponent = {
 
       // For demo purposes, show the reset link in console
       if (response.resetLink) {
-        console.log('🔗 Demo Reset Link:', response.resetLink);
+        console.log('Demo Reset Link:', response.resetLink);
         Toast.show(`Demo: Check console for reset link`, 'info');
       }
     } catch (error) {
@@ -635,25 +575,25 @@ const ResetPasswordComponent = {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     
-    console.log('🔍 ResetPasswordComponent.init() - Token detected:', token);
+    console.log('ResetPasswordComponent.init() - Token detected:', token);
     
     if (token) {
       this.currentToken = token;
-      console.log('🎯 Token found, showing reset password page');
+      console.log('Token found, showing reset password page');
       App.showPage('resetPassword');
       
       // Add form listener
       const form = document.getElementById('resetPasswordForm');
       if (form) {
         form.addEventListener('submit', this.handleResetPassword.bind(this));
-        console.log('✅ Reset password form listener added');
+        console.log('Reset password form listener added');
       } else {
-        console.log('❌ Reset password form not found');
+        console.log('Reset password form not found');
       }
       
       return true; // Token found
     } else {
-      console.log('ℹ️ No token found in URL');
+      console.log('No token found in URL');
       return false; // No token
     }
   },
@@ -727,15 +667,15 @@ const EmailVerificationComponent = {
     const urlParams = new URLSearchParams(window.location.search);
     const emailToken = urlParams.get('emailToken');
     
-    console.log('🔍 EmailVerificationComponent.init() - Token detected:', emailToken);
+    console.log('EmailVerificationComponent.init() - Token detected:', emailToken);
     
     if (emailToken) {
       this.currentToken = emailToken;
-      console.log('📧 Email verification token found, processing verification');
+      console.log('Email verification token found, processing verification');
       this.verifyEmailChange(emailToken);
       return true; // Token found
     } else {
-      console.log('ℹ️ No email verification token found in URL');
+      console.log('No email verification token found in URL');
       return false; // No token
     }
   },
@@ -743,7 +683,7 @@ const EmailVerificationComponent = {
   // Handle email verification
   async verifyEmailChange(token) {
     try {
-      console.log('📧 Verifying email change with token:', token);
+      console.log('Verifying email change with token:', token);
       
       // Call email verification API
       const response = await API.verifyEmailChange(token);
@@ -1425,4 +1365,4 @@ window.VideoHoverComponent = VideoHoverComponent;
 // Global utility functions
 window.filterByCategory = filterByCategory;
 
-console.log('✅ All global functions exposed successfully!');
+console.log('All global functions exposed successfully!');

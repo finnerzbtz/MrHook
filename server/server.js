@@ -1016,73 +1016,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Debug endpoint to check database contents
-app.get('/api/debug/database', async (req, res) => {
-  try {
-    if (!db.pool) {
-      return res.json({
-        message: 'Database not connected',
-        tables: {},
-        environment: {
-          DATABASE_URL: !!process.env.DATABASE_URL,
-          NODE_ENV: process.env.NODE_ENV || 'development'
-        }
-      });
-    }
 
-    const result = {
-      message: 'Database connected',
-      tables: {},
-      environment: {
-        DATABASE_URL: !!process.env.DATABASE_URL,
-        NODE_ENV: process.env.NODE_ENV || 'development'
-      }
-    };
-
-    // Check users table
-    try {
-      const usersResult = await db.query('SELECT id, email, first_name, last_name, created_at FROM users ORDER BY created_at DESC LIMIT 10');
-      result.tables.users = {
-        count: usersResult.rows.length,
-        recent: usersResult.rows
-      };
-    } catch (error) {
-      result.tables.users = { error: error.message };
-    }
-
-    // Check products table
-    try {
-      const productsResult = await db.query('SELECT COUNT(*) as count FROM products');
-      result.tables.products = {
-        count: parseInt(productsResult.rows[0].count)
-      };
-    } catch (error) {
-      result.tables.products = { error: error.message };
-    }
-
-    // Check cart_items table
-    try {
-      const cartResult = await db.query('SELECT COUNT(*) as count FROM cart_items');
-      result.tables.cart_items = {
-        count: parseInt(cartResult.rows[0].count)
-      };
-    } catch (error) {
-      result.tables.cart_items = { error: error.message };
-    }
-
-    res.json(result);
-  } catch (error) {
-    console.error('Database debug error:', error);
-    res.status(500).json({ 
-      message: 'Database debug failed', 
-      error: error.message,
-      environment: {
-        DATABASE_URL: !!process.env.DATABASE_URL,
-        NODE_ENV: process.env.NODE_ENV || 'development'
-      }
-    });
-  }
-});
 
 // Serve frontend
 app.get('*', (req, res) => {
@@ -1129,7 +1063,6 @@ async function startServer() {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
-      console.log(`🌐 Access your app at: http://localhost:${PORT}`);
       console.log(`📊 Database: ${db.pool ? 'PostgreSQL Connected' : 'In-memory fallback'}`);
 
       if (!db.pool) {

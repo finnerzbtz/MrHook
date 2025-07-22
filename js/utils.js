@@ -350,5 +350,13 @@ function togglePassword(inputId) {
 
 // Initialize utilities
 function initUtils() {
-  console.log('Utils initialized');
+  // Set up global error handling
+  window.addEventListener('error', (event) => {
+    console.error('Global Error:', event.error);
+  });
+
+  // Set up unhandled promise rejection handling
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled Promise Rejection:', event.reason);
+  });
 }

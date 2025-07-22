@@ -32,7 +32,6 @@ class ApiService {
     }
 
     try {
-      console.log(`Making API request: ${endpoint}`, { hasToken: !!this.token });
       const response = await fetch(url, config);
       
       // Handle non-JSON responses (like HTML error pages)
@@ -49,7 +48,6 @@ class ApiService {
         throw new Error(data.message || `HTTP ${response.status}: API request failed`);
       }
 
-      console.log(`API request successful: ${endpoint}`, data);
       return data;
     } catch (error) {
       console.error('API Error:', error);
@@ -123,31 +121,17 @@ class ApiService {
 
   // Products
   async getProducts(filters = {}) {
-    console.log('🌐 DEBUG: API getProducts called with filters:', filters);
-    
     const params = new URLSearchParams();
     Object.keys(filters).forEach(key => {
       if (filters[key]) {
         params.append(key, filters[key]);
-        console.log(`📎 DEBUG: Added filter ${key} = ${filters[key]}`);
       }
     });
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
     const fullUrl = `/products${queryString}`;
     
-    console.log('🎯 DEBUG: Making API request to:', fullUrl);
-    
     const result = await this.request(fullUrl);
-    
-    console.log('📦 DEBUG: API returned products:', result.length);
-    console.log('📋 DEBUG: Product details:', result.map(p => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      type: p.type
-    })));
-    
     return result;
   }
 

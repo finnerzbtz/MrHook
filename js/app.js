@@ -227,12 +227,9 @@ const App = {
 
       // Show specific page
       const targetPage = document.getElementById(`${pageName}Page`);
-      console.log(`🔍 App.showPage() - Looking for page: ${pageName}Page`);
-      console.log(`🎯 App.showPage() - Target page found:`, !!targetPage);
       
       if (targetPage) {
         targetPage.classList.add('active', 'fade-in');
-        console.log(`✅ App.showPage() - Successfully showed page: ${pageName}Page`);
 
         // Render page content
         switch (pageName) {
@@ -259,7 +256,6 @@ const App = {
                 display: block !important;
                 overflow-y: auto !important;
               `;
-              console.log('🎯 Applied full-width inline styles to product detail page');
             }
             break;
           case 'resetPassword':
@@ -283,9 +279,6 @@ const App = {
     });
 
     this.currentPage = pageName;
-
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   // Update authentication UI

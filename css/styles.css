@@ -179,6 +179,17 @@ a:hover {
   color: var(--primary-color);
 }
 
+.logo-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transition: all var(--transition-base);
+}
+
+.logo:hover .logo-image {
+  transform: scale(1.1);
+}
+
 .logo-icon {
   font-size: 2rem;
   color: var(--secondary-color);
