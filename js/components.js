@@ -266,10 +266,11 @@ const AuthComponent = {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
+    const homeAddress = document.getElementById('homeAddress').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !homeAddress || !password || !confirmPassword) {
       Toast.show('Please fill in all fields', 'error');
       return;
     }
@@ -278,29 +279,6 @@ const AuthComponent = {
       Toast.show('Passwords do not match', 'error');
       return;
     }
-
-    // Get address from form fields
-    const phone = document.getElementById('signupPhone')?.value.trim() || '';
-    const addressLine1 = document.getElementById('signupAddressLine1')?.value.trim() || '';
-    const addressLine2 = document.getElementById('signupAddressLine2')?.value.trim() || '';
-    const city = document.getElementById('signupCity')?.value.trim() || '';
-    const postcode = document.getElementById('signupPostcode')?.value.trim() || '';
-    const county = document.getElementById('signupCounty')?.value.trim() || '';
-
-    // Validate required address fields
-    if (!addressLine1 || !city || !postcode) {
-      Toast.show('Please complete your address details', 'error');
-      return;
-    }
-
-    const address = {
-      phone,
-      line1: addressLine1,
-      line2: addressLine2,
-      city,
-      postcode,
-      county
-    };
 
     if (!isValidEmail(email)) {
       Toast.show('Please enter a valid email address', 'error');
@@ -316,9 +294,8 @@ const AuthComponent = {
       const userData = { 
         firstName, 
         lastName, 
+        homeAddress,
         email, 
-        phone: address.phone || '', 
-        address: address, 
         password 
       };
       
@@ -441,22 +418,7 @@ const ProfileComponent = {
     const firstName = user.firstName || user.first_name || 'Not provided';
     const lastName = user.lastName || user.last_name || 'Not provided';
     const email = user.email || 'Not provided';
-    const phone = user.phone || 'Not provided';
-    
-    // Handle address - build full address display
-    let addressDisplay = 'Not provided';
-    if (user.address && typeof user.address === 'object') {
-      const addressParts = [];
-      if (user.address.line1) addressParts.push(user.address.line1);
-      if (user.address.line2) addressParts.push(user.address.line2);
-      if (user.address.city) addressParts.push(user.address.city);
-      if (user.address.postcode) addressParts.push(user.address.postcode);
-      if (user.address.county) addressParts.push(user.address.county);
-      
-      if (addressParts.length > 0) {
-        addressDisplay = addressParts.join(', ');
-      }
-    }
+    const homeAddress = user.homeAddress || user.home_address || 'Not provided';
 
     container.innerHTML = `
       <div class="profile-info-item">
@@ -472,12 +434,8 @@ const ProfileComponent = {
         <span>${escapeHtml(email)}</span>
       </div>
       <div class="profile-info-item">
-        <label>Phone:</label>
-        <span>${escapeHtml(phone)}</span>
-      </div>
-      <div class="profile-info-item">
-        <label>Address:</label>
-        <span>${escapeHtml(addressDisplay)}</span>
+        <label>Home Address:</label>
+        <span>${escapeHtml(homeAddress)}</span>
       </div>
       <div class="profile-actions">
         <button class="btn btn-primary" onclick="ProfileComponent.startEditing()">
@@ -497,24 +455,7 @@ const ProfileComponent = {
     const firstName = user.firstName || user.first_name || '';
     const lastName = user.lastName || user.last_name || '';
     const email = user.email || '';
-    const phone = user.phone || '';
-    
-    // Handle address - extract individual fields
-    let addressLine1 = '';
-    let addressLine2 = '';
-    let city = '';
-    let postcode = '';
-    let county = '';
-    
-    if (user.address) {
-      if (typeof user.address === 'object') {
-        addressLine1 = user.address.line1 || user.address.address_line_1 || '';
-        addressLine2 = user.address.line2 || user.address.address_line_2 || '';
-        city = user.address.city || '';
-        postcode = user.address.postcode || '';
-        county = user.address.county || '';
-      }
-    }
+    const homeAddress = user.homeAddress || user.home_address || '';
 
     container.innerHTML = `
       <form id="profileEditForm" class="profile-edit-form">
@@ -534,33 +475,8 @@ const ProfileComponent = {
           <small class="form-note">Email cannot be changed at this time</small>
         </div>
         <div class="form-group">
-          <label for="editPhone">Phone</label>
-          <input type="tel" id="editPhone" value="${escapeHtml(phone)}" class="form-input">
-        </div>
-        
-        <h4 style="margin: var(--space-6) 0 var(--space-4) 0; color: var(--primary-color);">Address Information</h4>
-        
-        <div class="form-group">
-          <label for="editAddressLine1">Address Line 1</label>
-          <input type="text" id="editAddressLine1" value="${escapeHtml(addressLine1)}" required class="form-input" placeholder="Street address, P.O. box, company name">
-        </div>
-        <div class="form-group">
-          <label for="editAddressLine2">Address Line 2 (Optional)</label>
-          <input type="text" id="editAddressLine2" value="${escapeHtml(addressLine2)}" class="form-input" placeholder="Apartment, suite, unit, building, floor, etc.">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="editCity">City</label>
-            <input type="text" id="editCity" value="${escapeHtml(city)}" required class="form-input">
-          </div>
-          <div class="form-group">
-            <label for="editPostcode">Postcode</label>
-            <input type="text" id="editPostcode" value="${escapeHtml(postcode)}" required class="form-input">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="editCounty">County</label>
-          <input type="text" id="editCounty" value="${escapeHtml(county)}" class="form-input">
+          <label for="editHomeAddress">Home Address</label>
+          <textarea id="editHomeAddress" required class="form-textarea">${escapeHtml(homeAddress)}</textarea>
         </div>
         
         <div class="profile-actions">
@@ -639,35 +555,20 @@ const ProfileComponent = {
 
     const firstName = document.getElementById('editFirstName').value.trim();
     const lastName = document.getElementById('editLastName').value.trim();
-    const phone = document.getElementById('editPhone').value.trim();
-    const addressLine1 = document.getElementById('editAddressLine1').value.trim();
-    const addressLine2 = document.getElementById('editAddressLine2').value.trim();
-    const city = document.getElementById('editCity').value.trim();
-    const postcode = document.getElementById('editPostcode').value.trim();
-    const county = document.getElementById('editCounty').value.trim();
+    const homeAddress = document.getElementById('editHomeAddress').value.trim();
 
     // Validation
-    if (!firstName || !lastName || !addressLine1 || !city || !postcode) {
+    if (!firstName || !lastName || !homeAddress) {
       Toast.show('Please fill in all required fields', 'error');
       return;
     }
 
     try {
-      // Prepare address object
-      const address = {
-        line1: addressLine1,
-        line2: addressLine2,
-        city: city,
-        postcode: postcode,
-        county: county
-      };
-
       // Update profile via API
       const response = await API.updateProfile({
         firstName,
         lastName,
-        phone,
-        address
+        homeAddress
       });
 
       // Update local storage with fresh data
