@@ -47,46 +47,73 @@ const ProductsComponent = {
     }, 100);
   },
 
-  // Show product detail modal
+  // Show product detail (replace products grid)
   showProductDetail(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
-    const modal = document.getElementById('productModal');
-    const detail = document.getElementById('productDetail');
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
 
-    detail.innerHTML = `
-      <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
-      <div class="product-detail-info">
-        <h2 class="product-detail-name">${escapeHtml(product.name)}</h2>
-        <p class="product-detail-category">${formatCategory(product.category)}</p>
-        <div class="product-detail-price">${formatPrice(product.price)}</div>
-        <p class="product-detail-description">${escapeHtml(product.description)}</p>
-      </div>
-      <div class="quantity-selector">
-        <label>Quantity:</label>
-        <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
-          <i class="fas fa-minus"></i>
-        </button>
-        <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
-        <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="product-actions">
-        <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
-          <i class="fas fa-shopping-basket"></i>
-          Add to Basket
-        </button>
-        <button class="btn btn-outline" onclick="closeProductModal()">
-          <i class="fas fa-arrow-left"></i>
-          Back to Products
-        </button>
+    // Hide filters when showing product detail
+    const filters = document.getElementById('filters');
+    if (filters) {
+      filters.style.display = 'none';
+    }
+
+    grid.innerHTML = `
+      <div class="product-detail-container">
+        <div class="product-detail-content">
+          <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
+          <div class="product-detail-info">
+            <h2 class="product-detail-name">${escapeHtml(product.name)}</h2>
+            <p class="product-detail-category">${formatCategory(product.category)}</p>
+            <div class="product-detail-price">${formatPrice(product.price)}</div>
+            <p class="product-detail-description">${escapeHtml(product.description)}</p>
+            
+            <div class="quantity-selector">
+              <label>Quantity:</label>
+              <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
+                <i class="fas fa-minus"></i>
+              </button>
+              <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
+              <button class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            
+            <div class="product-actions">
+              <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
+                <i class="fas fa-shopping-basket"></i>
+                Add to Basket
+              </button>
+              <button class="btn btn-outline" onclick="ProductsComponent.backToSearch()">
+                <i class="fas fa-arrow-left"></i>
+                Back to Search
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // Store current product for quantity updates
+    this.currentProduct = productId;
+  },
+
+  // Back to search function
+  backToSearch() {
+    // Show filters again
+    const filters = document.getElementById('filters');
+    if (filters) {
+      filters.style.display = 'block';
+    }
+
+    // Clear current product
+    this.currentProduct = null;
+
+    // Re-render the products grid
+    this.render();
   },
 
   // Update quantity in modal
@@ -115,7 +142,8 @@ const ProductsComponent = {
     const product = products.find(p => p.id === productId);
     Toast.show(`${product.name} added to basket!`);
 
-    closeProductModal();
+    // Go back to search after adding to cart
+    this.backToSearch();
   },
 
   // Apply filters
@@ -798,12 +826,7 @@ const BasketComponent = {
   }
 };
 
-// Close product modal
-function closeProductModal() {
-  const modal = document.getElementById('productModal');
-  modal.classList.remove('active');
-  document.body.style.overflow = '';
-}
+
 
 // Reset filters
 function resetFilters() {

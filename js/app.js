@@ -54,20 +54,7 @@ const App = {
       }
     });
 
-    // Close modal when clicking outside
-    document.addEventListener('click', (e) => {
-      const modal = document.getElementById('productModal');
-      if (e.target === modal) {
-        closeProductModal();
-      }
-    });
-
-    // Escape key to close modal
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeProductModal();
-      }
-    });
+    
 
     // Search input
     const searchInput = document.getElementById('searchInput');
