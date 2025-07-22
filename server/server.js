@@ -933,4 +933,20 @@ async function startServer() {
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
-      console.log(`
+      console.log(`🌐 Access your app at: http://localhost:${PORT}`);
+      console.log(`📊 Database: ${db.pool ? 'PostgreSQL Connected' : 'In-memory fallback'}`);
+
+      if (!db.pool) {
+        console.log('⚠️  To enable database features:');
+        console.log('   1. Open Database tab in Replit');
+        console.log('   2. Click "Connect" to enable PostgreSQL');
+        console.log('   3. Restart the server');
+      }
+    });
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
