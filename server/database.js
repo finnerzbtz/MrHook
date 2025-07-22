@@ -1,14 +1,11 @@
-` tags.
 
-```
-<replit_final_file>
 const { Pool } = require('pg');
 
 class Database {
   constructor() {
     // Use Replit's PostgreSQL connection string if available
     const connectionString = process.env.DATABASE_URL;
-
+    
     if (connectionString) {
       // Use connection pooling for better performance
       const poolUrl = connectionString.replace('.us-east-2', '-pooler.us-east-2');
@@ -38,6 +35,12 @@ class Database {
           home_address TEXT NOT NULL,
           email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
+          phone VARCHAR(20),
+          address_line1 VARCHAR(255),
+          address_line2 VARCHAR(255),
+          city VARCHAR(100),
+          postcode VARCHAR(20),
+          county VARCHAR(100),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -52,6 +55,7 @@ class Database {
           image VARCHAR(255),
           type VARCHAR(100) NOT NULL,
           category VARCHAR(50),
+          stock INTEGER DEFAULT 0,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -108,19 +112,19 @@ class Database {
       }
 
       const products = [
-        ['Premium Carbon Fiber Rod', 149.99, 'Professional grade carbon fiber fishing rod with enhanced sensitivity and durability.', 'assets/pexels-cottonbro-4822295.jpg', 'Fishing Rods', 'rods'],
-        ['Professional Hook Set', 24.99, 'Complete set of professional fishing hooks in various sizes.', 'assets/pexels-karolina-grabowska-6478094.jpg', 'Hooks', 'hooks'],
-        ['Fresh Live Bait Collection', 18.99, 'Premium fresh bait collection for the best fishing experience.', 'assets/pexels-karolina-grabowska-6478141.jpg', 'Bait', 'bait'],
-        ['Tackle Storage Box', 39.99, 'Waterproof tackle box with multiple compartments.', 'assets/pexels-lum3n-44775-294674.jpg', 'Containers', 'containers'],
-        ['Professional Fishing Line', 12.99, 'High-strength fishing line suitable for all fishing conditions.', 'assets/pexels-pablo-gutierrez-2064903-3690705.jpg', 'Other', 'other'],
-        ['Spinning Reel Combo', 89.99, 'Complete spinning reel and rod combination for beginners.', 'assets/pexels-jplenio-1105386.jpg', 'Fishing Rods', 'rods'],
-        ['Bait Bucket Pro', 29.99, 'Professional bait bucket with aeration system.', 'assets/pexels-pixabay-39854.jpg', 'Containers', 'containers'],
-        ['Multi-Tool Fisher', 34.99, 'Essential fishing multi-tool with pliers, knife, and hook remover.', 'assets/pexels-brent-keane-181485-1687242.jpg', 'Other', 'other']
+        ['Premium Carbon Fiber Rod', 149.99, 'Professional grade carbon fiber fishing rod with enhanced sensitivity and durability.', 'assets/pexels-cottonbro-4822295.jpg', 'Fishing Rods', 'rods', 15],
+        ['Professional Hook Set', 24.99, 'Complete set of professional fishing hooks in various sizes.', 'assets/pexels-karolina-grabowska-6478094.jpg', 'Hooks', 'hooks', 30],
+        ['Fresh Live Bait Collection', 18.99, 'Premium fresh bait collection for the best fishing experience.', 'assets/pexels-karolina-grabowska-6478141.jpg', 'Bait', 'bait', 25],
+        ['Tackle Storage Box', 39.99, 'Waterproof tackle box with multiple compartments.', 'assets/pexels-lum3n-44775-294674.jpg', 'Containers', 'containers', 20],
+        ['Professional Fishing Line', 12.99, 'High-strength fishing line suitable for all fishing conditions.', 'assets/pexels-pablo-gutierrez-2064903-3690705.jpg', 'Other', 'other', 50],
+        ['Spinning Reel Combo', 89.99, 'Complete spinning reel and rod combination for beginners.', 'assets/pexels-jplenio-1105386.jpg', 'Fishing Rods', 'rods', 12],
+        ['Bait Bucket Pro', 29.99, 'Professional bait bucket with aeration system.', 'assets/pexels-pixabay-39854.jpg', 'Containers', 'containers', 18],
+        ['Multi-Tool Fisher', 34.99, 'Essential fishing multi-tool with pliers, knife, and hook remover.', 'assets/pexels-brent-keane-181485-1687242.jpg', 'Other', 'other', 22]
       ];
 
       for (const product of products) {
         await this.pool.query(
-          'INSERT INTO products (name, price, description, image, type, category) VALUES ($1, $2, $3, $4, $5, $6)',
+          'INSERT INTO products (name, price, description, image, type, category, stock) VALUES ($1, $2, $3, $4, $5, $6, $7)',
           product
         );
       }
