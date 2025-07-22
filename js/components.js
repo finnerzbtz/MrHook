@@ -487,8 +487,8 @@ const ProfileComponent = {
         </div>
         <div class="form-group">
           <label for="editEmail">Email</label>
-          <input type="email" id="editEmail" value="${escapeHtml(email)}" required class="form-input">
-          <small class="form-note">Changing email will require verification</small>
+          <input type="email" id="editEmail" value="${escapeHtml(email)}" readonly class="form-input" style="background-color: #f5f5f5; cursor: not-allowed;">
+          <small class="form-note">Email cannot be changed at this time</small>
         </div>
         <div class="form-group">
           <label for="editPhone">Phone</label>
@@ -596,7 +596,6 @@ const ProfileComponent = {
 
     const firstName = document.getElementById('editFirstName').value.trim();
     const lastName = document.getElementById('editLastName').value.trim();
-    const email = document.getElementById('editEmail').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
     const addressLine1 = document.getElementById('editAddressLine1').value.trim();
     const addressLine2 = document.getElementById('editAddressLine2').value.trim();
@@ -605,18 +604,10 @@ const ProfileComponent = {
     const county = document.getElementById('editCounty').value.trim();
 
     // Validation
-    if (!firstName || !lastName || !email || !addressLine1 || !city || !postcode) {
+    if (!firstName || !lastName || !addressLine1 || !city || !postcode) {
       Toast.show('Please fill in all required fields', 'error');
       return;
     }
-
-    if (!isValidEmail(email)) {
-      Toast.show('Please enter a valid email address', 'error');
-      return;
-    }
-
-    const currentUser = Auth.getCurrentUser();
-    const emailChanged = email !== (currentUser.email);
 
     try {
       // Prepare address object
@@ -642,11 +633,7 @@ const ProfileComponent = {
       this.isEditing = false;
       this.render();
 
-      if (emailChanged) {
-        Toast.show('Profile updated! Email verification sent to new address.');
-      } else {
-        Toast.show('Profile updated successfully!');
-      }
+      Toast.show('Profile updated successfully!');
     } catch (error) {
       console.error('Profile update error:', error);
       Toast.show(error.message || 'Error updating profile. Please try again.', 'error');
