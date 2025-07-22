@@ -395,13 +395,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         phone: user.phone,
-        address: {
-          line1: user.address_line1,
-          line2: user.address_line2,
-          city: user.city,
-          postcode: user.postcode,
-          county: user.county
-        }
+        homeAddress: user.home_address
       }
     });
   } catch (error) {
@@ -412,56 +406,38 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
 
 app.put('/api/profile', authenticateToken, async (req, res) => {
   try {
-    const { firstName, lastName, phone, address } = req.body;
+    const { firstName, lastName, phone, homeAddress } = req.body;
 
-    console.log('Profile update request:', { firstName, lastName, phone, address, userId: req.user.id });
+    console.log('Profile update request:', { firstName, lastName, phone, homeAddress, userId: req.user.id });
 
     if (!db.pool) {
       return res.status(500).json({ message: 'Database not available' });
     }
 
     // Validate input
-    if (!firstName || !lastName) {
-      return res.status(400).json({ message: 'First name and last name are required' });
+    if (!firstName || !lastName || !homeAddress) {
+      return res.status(400).json({ message: 'First name, last name, and home address are required' });
     }
-
-    // Safely extract address fields
-    const addressLine1 = address && address.line1 ? address.line1 : '';
-    const addressLine2 = address && address.line2 ? address.line2 : '';
-    const city = address && address.city ? address.city : '';
-    const postcode = address && address.postcode ? address.postcode : '';
-    const county = address && address.county ? address.county : '';
 
     console.log('Updating user with values:', {
       firstName,
       lastName,
       phone: phone || '',
-      addressLine1,
-      addressLine2,
-      city,
-      postcode,
-      county,
+      homeAddress,
       userId: req.user.id
     });
 
-    // Update user in database
+    // Update user in database - use home_address as per the original brief
     const result = await db.query(
       `UPDATE users 
-       SET first_name = $1, last_name = $2, phone = $3, 
-           address_line1 = $4, address_line2 = $5, city = $6, 
-           postcode = $7, county = $8
-       WHERE id = $9 
-       RETURNING id, email, first_name, last_name, phone, 
-                 address_line1, address_line2, city, postcode, county`,
+       SET first_name = $1, last_name = $2, phone = $3, home_address = $4
+       WHERE id = $5 
+       RETURNING id, email, first_name, last_name, phone, home_address`,
       [
         firstName, 
         lastName, 
         phone || '', 
-        addressLine1,
-        addressLine2,
-        city,
-        postcode,
-        county,
+        homeAddress,
         req.user.id
       ]
     );
@@ -481,13 +457,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         firstName: updatedUser.first_name,
         lastName: updatedUser.last_name,
         phone: updatedUser.phone,
-        address: {
-          line1: updatedUser.address_line1,
-          line2: updatedUser.address_line2,
-          city: updatedUser.city,
-          postcode: updatedUser.postcode,
-          county: updatedUser.county
-        }
+        homeAddress: updatedUser.home_address
       }
     });
   } catch (error) {

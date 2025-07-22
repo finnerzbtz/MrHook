@@ -564,7 +564,7 @@ const ProfileComponent = {
     }
 
     try {
-      // Update profile via API
+      // Update profile via API - send homeAddress as a simple string
       const response = await API.updateProfile({
         firstName,
         lastName,
