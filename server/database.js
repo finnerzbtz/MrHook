@@ -100,6 +100,14 @@ class Database {
         )
       `);
 
+      // Drop the conflicting total column if it exists
+      try {
+        await this.pool.query(`ALTER TABLE orders DROP COLUMN IF EXISTS total`);
+        console.log('✅ Removed conflicting total column');
+      } catch (error) {
+        console.log('ℹ️ Total column cleanup:', error.message);
+      }
+
       // Create order_items table
       console.log('Creating order_items table...');
       await this.pool.query(`
