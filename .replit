@@ -3,7 +3,7 @@ run = "npm run dev"
 modules = ["nodejs-14", "web", "nix", "postgresql-16"]
 
 [deployment]
-run = ["sh", "-c", "npm run dev"]
+run = ["sh", "-c", "npm start"]
 
 [env]
 XDG_CONFIG_HOME = "/home/runner/.config"
