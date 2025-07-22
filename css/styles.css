@@ -654,11 +654,11 @@ a:hover {
   
   /* Specific fix for containers-more video to match hover zoom */
   .category-card[data-category="containers-more"] .category-video {
-    transform: scale(1.1);
+    transform: scale(1.2);
     object-position: center center;
   }
   
   .category-card[data-category="containers-more"] .category-video.playing {
-    transform: scale(1.1);
+    transform: scale(1.2);
   }
 } 
