@@ -241,22 +241,7 @@ const App = {
             break;
           case 'productDetail':
             // Product detail content is already populated
-            // Force full-width layout with inline styles
-            if (targetPage) {
-              targetPage.style.cssText = `
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                z-index: 9999 !important;
-                background: white !important;
-                display: block !important;
-                overflow-y: auto !important;
-              `;
-            }
+            // Page shows with header visible - no overlay needed
             break;
           case 'resetPassword':
             // Reset password page rendered from HTML
