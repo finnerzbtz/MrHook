@@ -14,22 +14,36 @@ const ProductsComponent = {
 
   // Load products from backend API
   async loadProducts(filters = {}) {
-    if (this.isLoading) return;
-
+    console.log('🔄 DEBUG: loadProducts called with filters:', filters);
+    
+    if (this.isLoading) {
+      console.log('⏳ DEBUG: Already loading, skipping...');
+      return;
+    }
+    
     this.isLoading = true;
     this.showLoadingState();
 
     try {
-      console.log('Loading products from API...');
+      console.log('📡 DEBUG: About to call API.getProducts...');
       this.allProducts = await API.getProducts(filters);
       this.filteredProducts = this.allProducts;
-      console.log('Products loaded:', this.allProducts.length);
+      
+      console.log('✅ DEBUG: Products loaded successfully:', {
+        count: this.allProducts.length,
+        products: this.allProducts.map(p => ({ id: p.id, name: p.name, category: p.category }))
+      });
+      
+      console.log('🎨 DEBUG: About to render products...');
       this.render();
+      console.log('✅ DEBUG: Render complete');
+      
     } catch (error) {
-      console.error('Failed to load products:', error);
+      console.error('❌ DEBUG: Failed to load products:', error);
       this.showErrorState('Failed to load products. Please refresh the page.');
     } finally {
       this.isLoading = false;
+      console.log('🔚 DEBUG: loadProducts finished, isLoading = false');
     }
   },
 
@@ -66,10 +80,21 @@ const ProductsComponent = {
 
   // Render products grid
   render() {
+    console.log('🎨 DEBUG: render() called');
+    
     const grid = document.getElementById('productsGrid');
-    if (!grid) return;
+    if (!grid) {
+      console.error('❌ DEBUG: productsGrid element not found!');
+      return;
+    }
+    
+    console.log('📊 DEBUG: About to render products:', {
+      filteredProducts: this.filteredProducts.length,
+      isLoading: this.isLoading
+    });
 
     if (this.filteredProducts.length === 0 && !this.isLoading) {
+      console.log('📭 DEBUG: No products to show, displaying no-products message');
       grid.innerHTML = `
         <div class="no-products">
           <i class="fas fa-fish" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
@@ -83,31 +108,48 @@ const ProductsComponent = {
       return;
     }
 
-    grid.innerHTML = this.filteredProducts.map((product, index) => `
-      <div class="product-card stagger-item" data-product-id="${product.id}" style="animation-delay: ${index * 0.1}s">
-        <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-image" loading="lazy">
-        <div class="product-info">
-          <h3 class="product-name">${escapeHtml(product.name)}</h3>
-          <p class="product-category">${formatCategory(product.category || product.type)}</p>
-          <div class="product-price">${formatPrice(product.price)}</div>
+    console.log('🏗️ DEBUG: Building product cards HTML...');
+    
+    const productCards = this.filteredProducts.map((product, index) => {
+      const card = `
+        <div class="product-card stagger-item" data-product-id="${product.id}" style="animation-delay: ${index * 0.1}s">
+          <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-image" loading="lazy">
+          <div class="product-info">
+            <h3 class="product-name">${escapeHtml(product.name)}</h3>
+            <p class="product-category">${formatCategory(product.category || product.type)}</p>
+            <div class="product-price">${formatPrice(product.price)}</div>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+      console.log(`📦 DEBUG: Created card for product ${product.id}: ${product.name}`);
+      return card;
+    });
+    
+    grid.innerHTML = productCards.join('');
+    console.log(`✅ DEBUG: Set grid innerHTML with ${productCards.length} cards`);
 
     // Add click listeners to product cards
-    grid.querySelectorAll('.product-card').forEach(card => {
+    const cards = grid.querySelectorAll('.product-card');
+    console.log(`🖱️ DEBUG: Adding click listeners to ${cards.length} cards`);
+    
+    cards.forEach(card => {
       card.addEventListener('click', () => {
         const productId = parseInt(card.dataset.productId);
+        console.log(`🖱️ DEBUG: Product card clicked: ${productId}`);
         this.showProductDetail(productId);
       });
     });
 
     // Trigger animation
     setTimeout(() => {
+      console.log('🎬 DEBUG: Triggering animations...');
       grid.querySelectorAll('.product-card').forEach((card, index) => {
         setTimeout(() => card.classList.add('fade-in'), index * 100);
       });
+      console.log('✨ DEBUG: Animations triggered');
     }, 100);
+    
+    console.log('🎉 DEBUG: render() completed successfully');
   },
 
   // Show product detail modal
@@ -250,13 +292,20 @@ const ProductsComponent = {
 
 // Filter by category from category cards - backend driven
 async function filterByCategory(categoryType) {
-  console.log('🎯 Filtering by category:', categoryType);
+  console.log('🎯 DEBUG: Starting filterByCategory with:', categoryType);
   
   try {
     const searchInput = document.getElementById('searchInput');
     const categoryFilter = document.getElementById('categoryFilter');
     const priceRange = document.getElementById('priceRange');
     const priceValue = document.getElementById('priceValue');
+
+    console.log('🔍 DEBUG: Found form elements:', {
+      searchInput: !!searchInput,
+      categoryFilter: !!categoryFilter,
+      priceRange: !!priceRange,
+      priceValue: !!priceValue
+    });
 
     // Reset other filters first
     if (searchInput) searchInput.value = '';
@@ -267,56 +316,87 @@ async function filterByCategory(categoryType) {
     switch(categoryType) {
       case 'fishing-rods':
         // Filter by 'rods' category
-        if (categoryFilter) categoryFilter.value = 'rods';
-        console.log('👉 Filtering by rods category');
+        if (categoryFilter) {
+          categoryFilter.value = 'rods';
+          console.log('✅ DEBUG: Set category filter to "rods"');
+        }
         break;
         
       case 'bait-hooks':
         // Use search to find bait and hooks
-        if (searchInput) searchInput.value = 'bait';
+        if (searchInput) {
+          searchInput.value = 'bait';
+          console.log('✅ DEBUG: Set search to "bait"');
+        }
         if (categoryFilter) categoryFilter.value = '';
-        console.log('👉 Searching for bait and hooks');
         break;
         
       case 'containers-more':
-        // Filter by containers category (most relevant items)
-        if (categoryFilter) categoryFilter.value = 'containers';
-        console.log('👉 Filtering by containers category');
+        // Filter by containers category
+        if (categoryFilter) {
+          categoryFilter.value = 'containers';
+          console.log('✅ DEBUG: Set category filter to "containers"');
+        }
         break;
         
       default:
         // Clear all filters
         if (categoryFilter) categoryFilter.value = '';
-        console.log('👉 Clearing all filters');
+        console.log('✅ DEBUG: Cleared all filters');
     }
 
+    // Show current form values
+    console.log('📋 DEBUG: Current form values:', {
+      search: searchInput?.value || '',
+      category: categoryFilter?.value || '',
+      price: priceRange?.value || ''
+    });
+
     // Apply the filters
+    console.log('⚙️ DEBUG: About to call applyFilters...');
     await ProductsComponent.applyFilters();
-    console.log('✅ Filters applied successfully');
+    
+    console.log('📊 DEBUG: After applyFilters - Product counts:', {
+      allProducts: ProductsComponent.allProducts.length,
+      filteredProducts: ProductsComponent.filteredProducts.length
+    });
+
+    // Log the actual products returned
+    console.log('📦 DEBUG: Filtered products:', ProductsComponent.filteredProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      type: p.type
+    })));
+
+    // Force a re-render to make sure UI updates
+    console.log('🎨 DEBUG: Forcing render...');
+    ProductsComponent.render();
 
     // Scroll to products section with a small delay
     setTimeout(() => {
-      console.log('📜 Scrolling to products section...');
+      console.log('📜 DEBUG: Attempting to scroll to products section...');
       const element = document.getElementById('productsSection');
       if (element) {
         element.scrollIntoView({ 
           behavior: 'smooth',
           block: 'start'
         });
-        console.log('✅ Scrolled to products section');
+        console.log('✅ DEBUG: Scrolled to products section');
       } else {
-        console.error('❌ Products section not found');
+        console.error('❌ DEBUG: Products section element not found!');
       }
-    }, 100);
+    }, 200);
     
     // Show success feedback
     setTimeout(() => {
       const count = ProductsComponent.filteredProducts.length;
-      Toast.show(`Found ${count} products`, 'success', 2000);
-    }, 200);
+      console.log(`📢 DEBUG: Showing toast with count: ${count}`);
+      Toast.show(`Found ${count} products`, 'success', 3000);
+    }, 300);
     
   } catch (error) {
-    console.error('❌ Error in filterByCategory:', error);
+    console.error('❌ DEBUG: Error in filterByCategory:', error);
     Toast.show('Failed to filter products', 'error');
   }
 }

@@ -93,13 +93,32 @@ class ApiService {
 
   // Products
   async getProducts(filters = {}) {
+    console.log('🌐 DEBUG: API getProducts called with filters:', filters);
+    
     const params = new URLSearchParams();
     Object.keys(filters).forEach(key => {
-      if (filters[key]) params.append(key, filters[key]);
+      if (filters[key]) {
+        params.append(key, filters[key]);
+        console.log(`📎 DEBUG: Added filter ${key} = ${filters[key]}`);
+      }
     });
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    return await this.request(`/products${queryString}`);
+    const fullUrl = `/products${queryString}`;
+    
+    console.log('🎯 DEBUG: Making API request to:', fullUrl);
+    
+    const result = await this.request(fullUrl);
+    
+    console.log('📦 DEBUG: API returned products:', result.length);
+    console.log('📋 DEBUG: Product details:', result.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      type: p.type
+    })));
+    
+    return result;
   }
 
   async getProduct(id) {
