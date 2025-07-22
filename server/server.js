@@ -184,13 +184,14 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     // In a real application, you would send an email here
     // For demo purposes, we'll just log the reset link
-    console.log(`🔗 Password reset link for ${email}: http://localhost:5000/reset-password?token=${resetToken}`);
+    const resetLink = `https://930cb833-7aa5-458c-8f39-ce1a2c953cf5-00-udrb5yhbnwub.janeway.replit.dev:5000/?token=${resetToken}`;
+    console.log(`🔗 Password reset link for ${email}: ${resetLink}`);
 
     res.json({ 
       message: 'If an account with that email exists, we have sent a password reset link.',
       // For demo purposes, include the token in response (remove in production!)
       resetToken: resetToken,
-      resetLink: `http://localhost:5000/reset-password?token=${resetToken}`
+      resetLink: resetLink
     });
   } catch (error) {
     console.error('Forgot password error:', error);
