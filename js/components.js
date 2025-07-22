@@ -669,7 +669,7 @@ const BasketComponent = {
         <span>Total:</span>
         <span>${formatPrice(total)}</span>
       </div>
-      <button class="btn btn-primary btn-checkout" onclick="BasketComponent.checkout()">
+      <button class="btn btn-primary btn-checkout" onclick="BasketComponent.placeOrder()">
         <i class="fas fa-credit-card"></i>
         Complete Order
       </button>
