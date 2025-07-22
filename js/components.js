@@ -288,23 +288,12 @@ const ProductsComponent = {
         return;
       }
 
-      // DEBUG: Force CSS class application
+      // Prepare the page but don't show it yet
       const productDetailPage = document.getElementById('productDetailPage');
       if (productDetailPage) {
-        productDetailPage.className = 'page product-detail-page active';
-        productDetailPage.style.cssText = `
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          z-index: 9999 !important;
-          background: white !important;
-          display: block !important;
-        `;
-        console.log('🎯 DEBUG: Force-applied inline styles to product detail page');
+        // Clear any previous inline styles that might be blocking
+        productDetailPage.style.cssText = '';
+        console.log('🎯 DEBUG: Cleared any blocking inline styles');
       }
 
       // Populate product detail page

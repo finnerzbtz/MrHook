@@ -197,6 +197,10 @@ const App = {
     // Hide all pages
     document.querySelectorAll('.page').forEach(page => {
       page.classList.remove('active', 'fade-in');
+      // Clear any inline styles that might be blocking interactions
+      if (page.id === 'productDetailPage') {
+        page.style.cssText = '';
+      }
     });
 
     // Hide categories and products sections for auth pages and product detail
@@ -229,6 +233,23 @@ const App = {
             break;
           case 'productDetail':
             // Product detail content is already populated
+            // Force full-width layout with inline styles
+            if (targetPage) {
+              targetPage.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                z-index: 9999 !important;
+                background: white !important;
+                display: block !important;
+                overflow-y: auto !important;
+              `;
+              console.log('🎯 Applied full-width inline styles to product detail page');
+            }
             break;
         }
       }
