@@ -188,6 +188,19 @@ class Database {
         console.log('ℹ️ User order number column:', error.message);
       }
 
+      // Ensure email verification columns exist for profile email changes
+      try {
+        await this.pool.query(`
+          ALTER TABLE users 
+          ADD COLUMN IF NOT EXISTS pending_email VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255),
+          ADD COLUMN IF NOT EXISTS email_verification_expires TIMESTAMP
+        `);
+        console.log('✅ Ensured email verification columns exist in users table');
+      } catch (error) {
+        console.log('ℹ️ Email verification columns:', error.message);
+      }
+
     } catch (error) {
       console.error('❌ Table creation failed:', error);
       throw error;

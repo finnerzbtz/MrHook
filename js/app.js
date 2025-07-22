@@ -10,11 +10,12 @@ const App = {
     // Initialize backend-driven components
     await this.initializeComponents();
     
-    // Check for password reset token AFTER everything is initialized
+    // Check for special tokens AFTER everything is initialized
     const hasResetToken = ResetPasswordComponent.init();
+    const hasEmailToken = EmailVerificationComponent.init();
     
-    // Only show home page if we're not handling a password reset
-    if (!hasResetToken) {
+    // Only show home page if we're not handling any special tokens
+    if (!hasResetToken && !hasEmailToken) {
       this.showPage('home');
     }
     initUtils();

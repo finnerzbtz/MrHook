@@ -243,6 +243,99 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
+// Email Verification Routes
+app.post('/api/auth/request-email-change', authenticateToken, async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+    const userId = req.user.id;
+
+    if (!newEmail) {
+      return res.status(400).json({ message: 'New email is required' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Check if new email is already in use by another user
+    const existingUser = await db.query('SELECT id FROM users WHERE email = $1 AND id != $2', [newEmail, userId]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ message: 'Email address is already in use' });
+    }
+
+    // Generate verification token
+    const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // Store pending email change
+    await db.query(
+      'UPDATE users SET pending_email = $1, email_verification_token = $2, email_verification_expires = $3 WHERE id = $4',
+      [newEmail, verificationToken, tokenExpiry, userId]
+    );
+
+    // In a real application, you would send an email here
+    // For demo purposes, we'll just log the verification link
+    const verificationLink = `https://930cb833-7aa5-458c-8f39-ce1a2c953cf5-00-udrb5yhbnwub.janeway.replit.dev:5000/?emailToken=${verificationToken}`;
+    console.log(`📧 Email verification link for ${newEmail}: ${verificationLink}`);
+
+    res.json({ 
+      message: `A verification link has been sent to ${newEmail}. Please check your email and click the link to confirm the change.`,
+      // For demo purposes, include the token in response (remove in production!)
+      verificationToken: verificationToken,
+      verificationLink: verificationLink
+    });
+  } catch (error) {
+    console.error('Email change request error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/auth/verify-email-change', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ message: 'Verification token is required' });
+    }
+
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Find user with valid verification token
+    const result = await db.query(
+      'SELECT id, email, pending_email FROM users WHERE email_verification_token = $1 AND email_verification_expires > NOW()',
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    }
+
+    const user = result.rows[0];
+
+    // Update email and clear verification fields
+    await db.query(
+      'UPDATE users SET email = $1, pending_email = NULL, email_verification_token = NULL, email_verification_expires = NULL WHERE id = $2',
+      [user.pending_email, user.id]
+    );
+
+    res.json({ 
+      message: 'Email address updated successfully!',
+      newEmail: user.pending_email
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Product Routes
 app.get('/api/products', async (req, res) => {
   try {

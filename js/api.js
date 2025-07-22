@@ -106,6 +106,21 @@ class ApiService {
     });
   }
 
+  // Email Verification
+  async requestEmailChange(newEmail) {
+    return await this.request('/auth/request-email-change', {
+      method: 'POST',
+      body: JSON.stringify({ newEmail })
+    });
+  }
+
+  async verifyEmailChange(token) {
+    return await this.request('/auth/verify-email-change', {
+      method: 'POST',
+      body: JSON.stringify({ token })
+    });
+  }
+
   // Products
   async getProducts(filters = {}) {
     console.log('🌐 DEBUG: API getProducts called with filters:', filters);

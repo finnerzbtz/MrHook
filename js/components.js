@@ -717,6 +717,58 @@ const ResetPasswordComponent = {
   }
 };
 
+// Email Verification Component
+const EmailVerificationComponent = {
+  currentToken: null,
+
+  // Initialize email verification detection
+  init() {
+    // Check URL for email verification token
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailToken = urlParams.get('emailToken');
+    
+    console.log('🔍 EmailVerificationComponent.init() - Token detected:', emailToken);
+    
+    if (emailToken) {
+      this.currentToken = emailToken;
+      console.log('📧 Email verification token found, processing verification');
+      this.verifyEmailChange(emailToken);
+      return true; // Token found
+    } else {
+      console.log('ℹ️ No email verification token found in URL');
+      return false; // No token
+    }
+  },
+
+  // Handle email verification
+  async verifyEmailChange(token) {
+    try {
+      console.log('📧 Verifying email change with token:', token);
+      
+      // Call email verification API
+      const response = await API.verifyEmailChange(token);
+      
+      Toast.show(`Email address updated successfully to ${response.newEmail}! Please login again.`);
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Force logout to refresh user data with new email
+      Auth.logout();
+      App.updateAuthUI();
+      App.showPage('login');
+      
+    } catch (error) {
+      console.error('Email verification error:', error);
+      Toast.show(error.message || 'Failed to verify email change. The link may be expired.', 'error');
+      
+      // Clear URL parameters and show home page
+      window.history.replaceState({}, document.title, window.location.pathname);
+      App.showPage('home');
+    }
+  }
+};
+
 // Profile Component
 const ProfileComponent = {
   isEditing: false,
@@ -884,8 +936,11 @@ const ProfileComponent = {
         </div>
         <div class="form-group">
           <label for="editEmail">Email</label>
-          <input type="email" id="editEmail" value="${escapeHtml(email)}" readonly class="form-input" style="background-color: #f5f5f5; cursor: not-allowed;">
-          <small class="form-note">Email cannot be changed at this time</small>
+          <input type="email" id="editEmail" value="${escapeHtml(email)}" class="form-input" placeholder="Enter your email address">
+          <small class="form-note">
+            <i class="fas fa-info-circle"></i>
+            Changing your email will require verification. A confirmation link will be sent to your new email address.
+          </small>
         </div>
         <div class="form-group">
           <label for="editHomeAddress">Home Address</label>
@@ -929,11 +984,21 @@ const ProfileComponent = {
 
     const firstName = document.getElementById('editFirstName').value.trim();
     const lastName = document.getElementById('editLastName').value.trim();
+    const newEmail = document.getElementById('editEmail').value.trim();
     const homeAddress = document.getElementById('editHomeAddress').value.trim();
 
+    // Get current user data to compare email
+    const currentUser = await Auth.getCurrentUser();
+    const currentEmail = currentUser?.email || '';
+
     // Validation
-    if (!firstName || !lastName || !homeAddress) {
+    if (!firstName || !lastName || !newEmail || !homeAddress) {
       Toast.show('Please fill in all required fields', 'error');
+      return;
+    }
+
+    if (!isValidEmail(newEmail)) {
+      Toast.show('Please enter a valid email address', 'error');
       return;
     }
 
@@ -945,22 +1010,47 @@ const ProfileComponent = {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
       }
 
-      // Update profile via API - send homeAddress as a simple string
-      console.log('Updating profile...');
-      await API.updateProfile({
-        firstName,
-        lastName,
-        homeAddress
-      });
+      // Check if email has changed
+      const emailChanged = newEmail !== currentEmail;
+
+      if (emailChanged) {
+        // Handle email change separately with verification
+        await API.requestEmailChange(newEmail);
+        Toast.show(`Verification link sent to ${newEmail}. Please check your email to confirm the change.`);
+        
+        // Also update other profile fields
+        await API.updateProfile({
+          firstName,
+          lastName,
+          homeAddress
+        });
+        
+        Toast.show('Profile updated! Please check your email to verify the email change.', 'info');
+      } else {
+        // Update profile normally (no email change)
+        await API.updateProfile({
+          firstName,
+          lastName,
+          homeAddress
+        });
+        
+        Toast.show('Profile updated successfully!');
+      }
 
       this.isEditing = false;
-      Toast.show('Profile updated successfully!');
 
       // Refresh the profile display
       await this.render();
     } catch (error) {
       console.error('Profile update error:', error);
       Toast.show(error.message || 'Error updating profile. Please try again.', 'error');
+    } finally {
+      // Reset button state
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      }
     }
   },
 
@@ -1327,6 +1417,7 @@ window.ProductsComponent = {
 
 window.AuthComponent = AuthComponent;
 window.ResetPasswordComponent = ResetPasswordComponent;
+window.EmailVerificationComponent = EmailVerificationComponent;
 window.ProfileComponent = ProfileComponent;
 window.BasketComponent = BasketComponent;
 window.VideoHoverComponent = VideoHoverComponent;
