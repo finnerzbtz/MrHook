@@ -24,15 +24,18 @@ const App = {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
 
-    mobileMenuBtn.addEventListener('click', () => {
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       mobileMenuBtn.classList.toggle('active');
       mobileMenu.classList.toggle('active');
     });
 
     // Navigation links
-    document.addEventListener('click', debounce((e) => {
+    document.addEventListener('click', (e) => {
       if (e.target.hasAttribute('data-page') || e.target.closest('[data-page]')) {
         e.preventDefault();
+        e.stopPropagation();
         const target = e.target.hasAttribute('data-page') ? e.target : e.target.closest('[data-page]');
         const page = target.getAttribute('data-page');
         this.showPage(page);
@@ -41,7 +44,7 @@ const App = {
         mobileMenuBtn.classList.remove('active');
         mobileMenu.classList.remove('active');
       }
-    }, 150));
+    });
 
     // Close mobile menu when clicking outside
     document.addEventListener('click', (e) => {

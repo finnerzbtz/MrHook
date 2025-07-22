@@ -673,6 +673,12 @@ const BasketComponent = {
       return;
     }
 
+    // Always ensure we're on the basket page
+    if (App.currentPage !== 'basket') {
+      App.showPage('basket');
+      return;
+    }
+
     const basketContent = document.getElementById('basketContent');
     const basketSummary = document.getElementById('basketSummary');
     const cart = Cart.get();
