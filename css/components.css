@@ -1051,7 +1051,8 @@
 
 .product-detail-page.active {
   display: block;
-  width: 100%;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
   background: var(--white);
 }
 
@@ -1084,7 +1085,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr; /* True 50/50 split */
   min-height: calc(100vh - 160px); /* Account for main header + detail header */
-  width: 100%;
+  width: 100vw;
   margin: 0;
 }
 
