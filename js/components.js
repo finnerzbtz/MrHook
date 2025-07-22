@@ -400,13 +400,18 @@ const ProfileComponent = {
     const email = user.email || 'Not provided';
     const phone = user.phone || 'Not provided';
     
-    // Handle address - could be object or string
+    // Handle address - build full address display
     let addressDisplay = 'Not provided';
-    if (user.address) {
-      if (typeof user.address === 'object') {
-        addressDisplay = `${user.address.address_line_1 || ''} ${user.address.address_line_2 || ''}, ${user.address.city || ''}, ${user.address.postcode || ''}`.trim();
-      } else {
-        addressDisplay = user.address;
+    if (user.address && typeof user.address === 'object') {
+      const addressParts = [];
+      if (user.address.line1) addressParts.push(user.address.line1);
+      if (user.address.line2) addressParts.push(user.address.line2);
+      if (user.address.city) addressParts.push(user.address.city);
+      if (user.address.postcode) addressParts.push(user.address.postcode);
+      if (user.address.county) addressParts.push(user.address.county);
+      
+      if (addressParts.length > 0) {
+        addressDisplay = addressParts.join(', ');
       }
     }
 
@@ -451,13 +456,20 @@ const ProfileComponent = {
     const email = user.email || '';
     const phone = user.phone || '';
     
-    // Handle address - could be object or string
-    let addressValue = '';
+    // Handle address - extract individual fields
+    let addressLine1 = '';
+    let addressLine2 = '';
+    let city = '';
+    let postcode = '';
+    let county = '';
+    
     if (user.address) {
       if (typeof user.address === 'object') {
-        addressValue = `${user.address.address_line_1 || ''}\n${user.address.address_line_2 || ''}\n${user.address.city || ''}\n${user.address.postcode || ''}`;
-      } else {
-        addressValue = user.address;
+        addressLine1 = user.address.line1 || user.address.address_line_1 || '';
+        addressLine2 = user.address.line2 || user.address.address_line_2 || '';
+        city = user.address.city || '';
+        postcode = user.address.postcode || '';
+        county = user.address.county || '';
       }
     }
 
@@ -482,10 +494,32 @@ const ProfileComponent = {
           <label for="editPhone">Phone</label>
           <input type="tel" id="editPhone" value="${escapeHtml(phone)}" class="form-input">
         </div>
+        
+        <h4 style="margin: var(--space-6) 0 var(--space-4) 0; color: var(--primary-color);">Address Information</h4>
+        
         <div class="form-group">
-          <label for="editAddress">Address</label>
-          <textarea id="editAddress" required class="form-input" rows="3">${escapeHtml(addressValue)}</textarea>
+          <label for="editAddressLine1">Address Line 1</label>
+          <input type="text" id="editAddressLine1" value="${escapeHtml(addressLine1)}" required class="form-input" placeholder="Street address, P.O. box, company name">
         </div>
+        <div class="form-group">
+          <label for="editAddressLine2">Address Line 2 (Optional)</label>
+          <input type="text" id="editAddressLine2" value="${escapeHtml(addressLine2)}" class="form-input" placeholder="Apartment, suite, unit, building, floor, etc.">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editCity">City</label>
+            <input type="text" id="editCity" value="${escapeHtml(city)}" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editPostcode">Postcode</label>
+            <input type="text" id="editPostcode" value="${escapeHtml(postcode)}" required class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editCounty">County</label>
+          <input type="text" id="editCounty" value="${escapeHtml(county)}" class="form-input">
+        </div>
+        
         <div class="profile-actions">
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i>
@@ -557,17 +591,22 @@ const ProfileComponent = {
   },
 
   // Handle profile update
-  handleProfileUpdate(event) {
+  async handleProfileUpdate(event) {
     event.preventDefault();
 
     const firstName = document.getElementById('editFirstName').value.trim();
     const lastName = document.getElementById('editLastName').value.trim();
     const email = document.getElementById('editEmail').value.trim();
-    const address = document.getElementById('editAddress').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
+    const addressLine1 = document.getElementById('editAddressLine1').value.trim();
+    const addressLine2 = document.getElementById('editAddressLine2').value.trim();
+    const city = document.getElementById('editCity').value.trim();
+    const postcode = document.getElementById('editPostcode').value.trim();
+    const county = document.getElementById('editCounty').value.trim();
 
     // Validation
-    if (!firstName || !lastName || !email || !address) {
-      Toast.show('Please fill in all fields', 'error');
+    if (!firstName || !lastName || !email || !addressLine1 || !city || !postcode) {
+      Toast.show('Please fill in all required fields', 'error');
       return;
     }
 
@@ -577,27 +616,40 @@ const ProfileComponent = {
     }
 
     const currentUser = Auth.getCurrentUser();
-    const emailChanged = email !== currentUser.email;
+    const emailChanged = email !== (currentUser.email);
 
-    // Update user data
-    const updatedUser = {
-      ...currentUser,
-      firstName,
-      lastName,
-      email,
-      address
-    };
+    try {
+      // Prepare address object
+      const address = {
+        line1: addressLine1,
+        line2: addressLine2,
+        city: city,
+        postcode: postcode,
+        county: county
+      };
 
-    // Save updated user
-    Auth.updateUser(updatedUser);
+      // Update profile via API
+      const response = await API.updateProfile({
+        firstName,
+        lastName,
+        phone,
+        address
+      });
 
-    this.isEditing = false;
-    this.render();
+      // Update local storage with fresh data
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
 
-    if (emailChanged) {
-      Toast.show('Profile updated! Email verification sent to new address.');
-    } else {
-      Toast.show('Profile updated successfully!');
+      this.isEditing = false;
+      this.render();
+
+      if (emailChanged) {
+        Toast.show('Profile updated! Email verification sent to new address.');
+      } else {
+        Toast.show('Profile updated successfully!');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      Toast.show(error.message || 'Error updating profile. Please try again.', 'error');
     }
   },
 

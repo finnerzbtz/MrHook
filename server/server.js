@@ -376,49 +376,87 @@ app.get('/api/orders', authenticateToken, (req, res) => {
 });
 
 // User Profile Routes
-app.get('/api/profile', authenticateToken, (req, res) => {
-  const user = users.find(u => u.id === req.user.id);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-  }
+app.get('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
 
-  res.json({
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    phone: user.phone,
-    address: user.address
-  });
+    const result = await db.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        phone: user.phone,
+        address: {
+          line1: user.address_line1,
+          line2: user.address_line2,
+          city: user.city,
+          postcode: user.postcode,
+          county: user.county
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.put('/api/profile', authenticateToken, (req, res) => {
-  const { firstName, lastName, phone, address } = req.body;
-  const userIndex = users.findIndex(u => u.id === req.user.id);
-  
-  if (userIndex === -1) {
-    return res.status(404).json({ message: 'User not found' });
-  }
+app.put('/api/profile', authenticateToken, async (req, res) => {
+  try {
+    const { firstName, lastName, phone, address } = req.body;
 
-  users[userIndex] = {
-    ...users[userIndex],
-    firstName,
-    lastName,
-    phone,
-    address
-  };
-
-  res.json({
-    message: 'Profile updated successfully',
-    user: {
-      id: users[userIndex].id,
-      email: users[userIndex].email,
-      firstName: users[userIndex].firstName,
-      lastName: users[userIndex].lastName,
-      phone: users[userIndex].phone,
-      address: users[userIndex].address
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
     }
-  });
+
+    // Update user in database
+    const result = await db.query(
+      `UPDATE users 
+       SET first_name = $1, last_name = $2, phone = $3, 
+           address_line1 = $4, address_line2 = $5, city = $6, 
+           postcode = $7, county = $8, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $9 
+       RETURNING id, email, first_name, last_name, phone, 
+                 address_line1, address_line2, city, postcode, county`,
+      [firstName, lastName, phone, address?.line1 || '', address?.line2 || '', 
+       address?.city || '', address?.postcode || '', address?.county || '', req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const updatedUser = result.rows[0];
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.first_name,
+        lastName: updatedUser.last_name,
+        phone: updatedUser.phone,
+        address: {
+          line1: updatedUser.address_line1,
+          line2: updatedUser.address_line2,
+          city: updatedUser.city,
+          postcode: updatedUser.postcode,
+          county: updatedUser.county
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 // Debug endpoint to check database contents
