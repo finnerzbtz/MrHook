@@ -238,7 +238,7 @@
                             <button type="submit" class="btn btn-primary auth-btn">
                                 Login <i class="fas fa-sign-in-alt"></i>
                             </button>
-                            <a href="#" class="forgot-password">Forgot Password?</a>
+                            <a href="#" class="forgot-password" onclick="AuthComponent.showPasswordReset()">Forgot Password?</a>
                         </form>
 
                         <!-- Signup Form -->
@@ -379,6 +379,29 @@
             </div>
         </div>
     </footer>
+
+    <!-- Password Reset Modal -->
+    <div class="modal" id="passwordResetModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="AuthComponent.closePasswordReset()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="password-reset-content">
+                <h3>Reset Password</h3>
+                <p>Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="passwordResetForm">
+                    <div class="form-group">
+                        <label for="resetEmail">Email Address</label>
+                        <input type="email" id="resetEmail" required class="form-input">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-envelope"></i>
+                        Send Reset Link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Success Toast -->
     <div class="toast" id="successToast">

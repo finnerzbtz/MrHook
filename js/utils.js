@@ -170,6 +170,33 @@ const Auth = {
     return userWithoutPassword;
   },
 
+  // Update user profile
+  updateUser(updatedUser) {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.id === updatedUser.id);
+
+    if (userIndex !== -1) {
+      users[userIndex] = updatedUser;
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      return updatedUser;
+    }
+    return null;
+  },
+
+  // Request password reset
+  requestPasswordReset(email) {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const user = users.find(u => u.email === email);
+
+    if (user) {
+      // In a real app, this would send an email
+      // For demo, we'll just show a success message
+      return true;
+    }
+    return false;
+  },
+
   // Logout user
   logout() {
     Storage.remove('currentUser');

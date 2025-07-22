@@ -278,11 +278,60 @@ const AuthComponent = {
 
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     document.getElementById(`${tab}Form`).classList.add('active');
+  },
+
+  // Show password reset modal
+  showPasswordReset() {
+    const modal = document.getElementById('passwordResetModal');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // Add form listener
+    const form = document.getElementById('passwordResetForm');
+    form.addEventListener('submit', this.handlePasswordReset);
+  },
+
+  // Close password reset modal
+  closePasswordReset() {
+    const modal = document.getElementById('passwordResetModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // Reset form
+    document.getElementById('passwordResetForm').reset();
+  },
+
+  // Handle password reset
+  handlePasswordReset(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('resetEmail').value.trim();
+    
+    if (!email) {
+      Toast.show('Please enter your email address', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Toast.show('Please enter a valid email address', 'error');
+      return;
+    }
+
+    const success = Auth.requestPasswordReset(email);
+    
+    if (success) {
+      Toast.show('Password reset link sent to your email!');
+      AuthComponent.closePasswordReset();
+    } else {
+      Toast.show('Email address not found', 'error');
+    }
   }
 };
 
 // Profile Component
 const ProfileComponent = {
+  isEditing: false,
+
   // Render profile information
   render() {
     const user = Auth.getCurrentUser();
@@ -294,8 +343,18 @@ const ProfileComponent = {
     const profileInfo = document.getElementById('profileInfo');
     const ordersList = document.getElementById('ordersList');
 
-    // Render user info
-    profileInfo.innerHTML = `
+    if (this.isEditing) {
+      this.renderEditForm(profileInfo, user);
+    } else {
+      this.renderViewMode(profileInfo, user);
+    }
+
+    this.renderOrders(ordersList, user);
+  },
+
+  // Render view mode
+  renderViewMode(container, user) {
+    container.innerHTML = `
       <div class="profile-info-item">
         <label>First Name:</label>
         <span>${escapeHtml(user.firstName)}</span>
@@ -312,24 +371,75 @@ const ProfileComponent = {
         <label>Address:</label>
         <span>${escapeHtml(user.address)}</span>
       </div>
-      <button class="btn btn-outline" onclick="AuthComponent.logout()">
-        <i class="fas fa-sign-out-alt"></i>
-        Logout
-      </button>
+      <div class="profile-actions">
+        <button class="btn btn-primary" onclick="ProfileComponent.startEditing()">
+          <i class="fas fa-edit"></i>
+          Edit Profile
+        </button>
+        <button class="btn btn-outline" onclick="ProfileComponent.logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
+    `;
+  },
+
+  // Render edit form
+  renderEditForm(container, user) {
+    container.innerHTML = `
+      <form id="profileEditForm" class="profile-edit-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editFirstName">First Name</label>
+            <input type="text" id="editFirstName" value="${escapeHtml(user.firstName)}" required class="form-input">
+          </div>
+          <div class="form-group">
+            <label for="editLastName">Last Name</label>
+            <input type="text" id="editLastName" value="${escapeHtml(user.lastName)}" required class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editEmail">Email</label>
+          <input type="email" id="editEmail" value="${escapeHtml(user.email)}" required class="form-input">
+          <small class="form-note">Changing email will require verification</small>
+        </div>
+        <div class="form-group">
+          <label for="editAddress">Address</label>
+          <textarea id="editAddress" required class="form-input" rows="3">${escapeHtml(user.address)}</textarea>
+        </div>
+        <div class="profile-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i>
+            Save Changes
+          </button>
+          <button type="button" class="btn btn-outline" onclick="ProfileComponent.cancelEditing()">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+        </div>
+      </form>
     `;
 
-    // Render orders
+    // Add form submit listener
+    document.getElementById('profileEditForm').addEventListener('submit', (e) => {
+      this.handleProfileUpdate(e);
+    });
+  },
+
+  // Render orders section
+  renderOrders(container, user) {
+
     const userOrders = mockOrders.filter(order => order.userId === user.id);
     
     if (userOrders.length === 0) {
-      ordersList.innerHTML = `
+      container.innerHTML = `
         <div class="no-orders">
           <i class="fas fa-receipt" style="font-size: 2rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
           <p>No orders yet. Start shopping to see your order history!</p>
         </div>
       `;
     } else {
-      ordersList.innerHTML = userOrders.map(order => `
+      container.innerHTML = userOrders.map(order => `
         <div class="order-item stagger-item">
           <div class="order-header">
             <h4>Order #${order.id}</h4>
@@ -352,6 +462,63 @@ const ProfileComponent = {
           </div>
         </div>
       `).join('');
+    }
+  },
+
+  // Start editing mode
+  startEditing() {
+    this.isEditing = true;
+    this.render();
+  },
+
+  // Cancel editing
+  cancelEditing() {
+    this.isEditing = false;
+    this.render();
+  },
+
+  // Handle profile update
+  handleProfileUpdate(event) {
+    event.preventDefault();
+    
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const address = document.getElementById('editAddress').value.trim();
+
+    // Validation
+    if (!firstName || !lastName || !email || !address) {
+      Toast.show('Please fill in all fields', 'error');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Toast.show('Please enter a valid email address', 'error');
+      return;
+    }
+
+    const currentUser = Auth.getCurrentUser();
+    const emailChanged = email !== currentUser.email;
+
+    // Update user data
+    const updatedUser = {
+      ...currentUser,
+      firstName,
+      lastName,
+      email,
+      address
+    };
+
+    // Save updated user
+    Auth.updateUser(updatedUser);
+
+    this.isEditing = false;
+    this.render();
+
+    if (emailChanged) {
+      Toast.show('Profile updated! Email verification sent to new address.');
+    } else {
+      Toast.show('Profile updated successfully!');
     }
   },
 
