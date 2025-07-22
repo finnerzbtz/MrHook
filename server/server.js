@@ -414,6 +414,8 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
   try {
     const { firstName, lastName, phone, address } = req.body;
 
+    console.log('Profile update request:', { firstName, lastName, phone, address, userId: req.user.id });
+
     if (!db.pool) {
       return res.status(500).json({ message: 'Database not available' });
     }
@@ -423,12 +425,31 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'First name and last name are required' });
     }
 
+    // Safely extract address fields
+    const addressLine1 = address && address.line1 ? address.line1 : '';
+    const addressLine2 = address && address.line2 ? address.line2 : '';
+    const city = address && address.city ? address.city : '';
+    const postcode = address && address.postcode ? address.postcode : '';
+    const county = address && address.county ? address.county : '';
+
+    console.log('Updating user with values:', {
+      firstName,
+      lastName,
+      phone: phone || '',
+      addressLine1,
+      addressLine2,
+      city,
+      postcode,
+      county,
+      userId: req.user.id
+    });
+
     // Update user in database
     const result = await db.query(
       `UPDATE users 
        SET first_name = $1, last_name = $2, phone = $3, 
            address_line1 = $4, address_line2 = $5, city = $6, 
-           postcode = $7, county = $8, updated_at = CURRENT_TIMESTAMP
+           postcode = $7, county = $8
        WHERE id = $9 
        RETURNING id, email, first_name, last_name, phone, 
                  address_line1, address_line2, city, postcode, county`,
@@ -436,11 +457,11 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         firstName, 
         lastName, 
         phone || '', 
-        address?.line1 || '', 
-        address?.line2 || '', 
-        address?.city || '', 
-        address?.postcode || '', 
-        address?.county || '', 
+        addressLine1,
+        addressLine2,
+        city,
+        postcode,
+        county,
         req.user.id
       ]
     );
@@ -450,6 +471,8 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     }
 
     const updatedUser = result.rows[0];
+    console.log('User updated successfully:', updatedUser);
+
     res.json({
       message: 'Profile updated successfully',
       user: {
@@ -469,7 +492,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Profile update error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
