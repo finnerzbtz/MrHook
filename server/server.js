@@ -803,6 +803,10 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
     });
 
     const orders = Object.values(ordersMap);
+    
+    // Ensure orders are sorted by date (most recent first) as per brief requirement
+    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
     res.json(orders);
   } catch (error) {
     console.error('Orders fetch error:', error);
