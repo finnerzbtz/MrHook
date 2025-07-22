@@ -116,7 +116,7 @@ class Database {
           product_id INTEGER REFERENCES products(id),
           order_id INTEGER REFERENCES orders(id),
           quantity INTEGER NOT NULL,
-          subtotal DECIMAL(10,2) NOT NULL
+          subtotal DECIMAL(10,2)
         )
       `);
 
@@ -132,6 +132,39 @@ class Database {
           UNIQUE(user_id, product_id)
         )
       `);
+
+      // CRITICAL: Add missing columns to fix API errors
+      console.log('🔧 Ensuring all required columns exist...');
+      
+      // Ensure date_ordered exists in orders table (API queries for o.date_ordered)
+      try {
+        await this.pool.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS date_ordered TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        `);
+        console.log('✅ Ensured date_ordered column exists in orders table');
+      } catch (error) {
+        console.log('ℹ️ Date ordered column:', error.message);
+      }
+
+      // Ensure subtotal exists in order_items table (API inserts subtotal)
+      try {
+        await this.pool.query(`
+          ALTER TABLE order_items ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2)
+        `);
+        console.log('✅ Ensured subtotal column exists in order_items table');
+      } catch (error) {
+        console.log('ℹ️ Subtotal column:', error.message);
+      }
+
+      // Ensure created_at exists in orders table (for consistency)
+      try {
+        await this.pool.query(`
+          ALTER TABLE orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        `);
+        console.log('✅ Ensured created_at column exists in orders table');
+      } catch (error) {
+        console.log('ℹ️ Created at column:', error.message);
+      }
 
     } catch (error) {
       console.error('❌ Table creation failed:', error);

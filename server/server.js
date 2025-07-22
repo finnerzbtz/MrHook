@@ -475,12 +475,11 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       return sum + (parseFloat(item.price) * item.quantity);
     }, 0);
 
-    // Create order - matches database schema exactly
+    // Create order
     const orderResult = await db.query(
-      'INSERT INTO orders (user_id, order_placed, total_price) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO orders (user_id, order_placed, total_price, date_ordered) VALUES ($1, $2, $3, CURRENT_TIMESTAMP) RETURNING *',
       [req.user.id, true, total]
     );
-
     const order = orderResult.rows[0];
 
     // Create order items and update stock
@@ -539,16 +538,27 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
       return res.status(500).json({ message: 'Database not available' });
     }
 
-    // Get user's orders - explicit column selection to match database
+    // Get user's orders - using flexible column selection
     const ordersResult = await db.query(`
-      SELECT o.id, o.user_id, o.order_placed, o.date_ordered, o.total_price,
-             oi.product_id, oi.quantity, oi.subtotal,
-             p.name, p.type, p.price, p.image, p.description
+      SELECT 
+        o.id, 
+        o.user_id, 
+        o.order_placed, 
+        COALESCE(o.date_ordered, o.created_at) as date_ordered,
+        o.total_price,
+        oi.product_id, 
+        oi.quantity, 
+        oi.subtotal,
+        p.name, 
+        p.type, 
+        p.price, 
+        p.image, 
+        p.description
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
       LEFT JOIN products p ON oi.product_id = p.id
       WHERE o.user_id = $1 AND o.order_placed = true
-      ORDER BY o.date_ordered DESC
+      ORDER BY COALESCE(o.date_ordered, o.created_at) DESC
     `, [req.user.id]);
 
     // Group by order
