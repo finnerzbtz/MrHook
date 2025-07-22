@@ -1,3 +1,7 @@
+Refactored header scroll behavior to prevent disappearing at the top of the page by improving the scroll detection logic.
+```
+
+```replit_final_file
 // Main Application
 const App = {
   currentPage: 'home',
@@ -6,14 +10,14 @@ const App = {
   async init() {
     this.setupEventListeners();
     this.updateAuthUI();
-    
+
     // Initialize backend-driven components
     await this.initializeComponents();
-    
+
     // Check for special tokens AFTER everything is initialized
     const hasResetToken = ResetPasswordComponent.init();
     const hasEmailToken = EmailVerificationComponent.init();
-    
+
     // Only show home page if we're not handling any special tokens
     if (!hasResetToken && !hasEmailToken) {
       this.showPage('home');
@@ -28,12 +32,12 @@ const App = {
     try {
       // Initialize products from backend
       await ProductsComponent.init();
-      
+
       // Update cart UI from backend if logged in
       if (Auth.isLoggedIn()) {
         await Cart.updateCartUI();
       }
-      
+
       // Initialize video hover functionality
       VideoHoverComponent.init();
     } catch (error) {
@@ -178,25 +182,40 @@ const App = {
 
     // Header scroll effect
     let lastScrollY = window.scrollY;
-    window.addEventListener('scroll', throttle(() => {
-      const header = document.getElementById('mainHeader');
-      if (!header) return;
-      
-      const currentScrollY = window.scrollY;
+    let ticking = false;
 
-      // Always show header when at the top of the page
-      if (currentScrollY <= 10) {
+    function updateHeader() {
+      const currentScrollY = window.scrollY;
+      const header = document.querySelector('.header');
+
+      if (!header) return;
+
+      // Always show header when at the top of the page or very close to it
+      if (currentScrollY <= 50) {
         header.style.transform = 'translateY(0)';
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Hide when scrolling down and past 100px
-        header.style.transform = 'translateY(-100%)';
-      } else if (currentScrollY < lastScrollY) {
-        // Show when scrolling up
-        header.style.transform = 'translateY(0)';
+        header.classList.add('at-top');
+      } else {
+        header.classList.remove('at-top');
+
+        if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          // Hide when scrolling down and past 100px
+          header.style.transform = 'translateY(-100%)';
+        } else if (currentScrollY < lastScrollY) {
+          // Show when scrolling up
+          header.style.transform = 'translateY(0)';
+        }
       }
 
-      lastScrollY = currentScrollY;
-    }, 100));
+      lastScrollY = Math.max(0, currentScrollY);
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateHeader);
+        ticking = true;
+      }
+    });
   },
 
   // Show specific page
@@ -227,7 +246,7 @@ const App = {
 
       // Show specific page
       const targetPage = document.getElementById(`${pageName}Page`);
-      
+
       if (targetPage) {
         targetPage.classList.add('active', 'fade-in');
 
@@ -253,7 +272,7 @@ const App = {
     // Update navigation active states
     document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
       link.classList.remove('active');
-      
+
       // Special handling for product detail page - mark Products as active
       const linkPage = link.getAttribute('data-page');
       if (pageName === 'productDetail' && linkPage === 'home') {
@@ -283,7 +302,7 @@ const App = {
           </a>
           <a href="#" class="nav-link" onclick="ProfileComponent.logout()">Logout</a>
         `;
-        
+
         // Update cart count from backend
         await Cart.updateCartUI();
       } else {
@@ -316,7 +335,7 @@ const App = {
             Logout
           </a>
         `;
-        
+
         // Update mobile cart count from backend
         await Cart.updateCartUI();
       } else {
