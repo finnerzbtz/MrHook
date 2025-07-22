@@ -402,9 +402,9 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
 
 app.put('/api/profile', authenticateToken, async (req, res) => {
   try {
-    const { firstName, lastName, phone, homeAddress } = req.body;
+    const { firstName, lastName, homeAddress } = req.body;
 
-    console.log('Profile update request:', { firstName, lastName, phone, homeAddress, userId: req.user.id });
+    console.log('Profile update request:', { firstName, lastName, homeAddress, userId: req.user.id });
 
     if (!db.pool) {
       return res.status(500).json({ message: 'Database not available' });
@@ -418,21 +418,19 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     console.log('Updating user with values:', {
       firstName,
       lastName,
-      phone: phone || '',
       homeAddress,
       userId: req.user.id
     });
 
-    // Update user in database - use home_address as per the original brief
+    // Update user in database - only update the fields that exist in the table
     const result = await db.query(
       `UPDATE users 
-       SET first_name = $1, last_name = $2, phone = $3, home_address = $4
-       WHERE id = $5 
-       RETURNING id, email, first_name, last_name, phone, home_address`,
+       SET first_name = $1, last_name = $2, home_address = $3
+       WHERE id = $4 
+       RETURNING id, email, first_name, last_name, home_address`,
       [
         firstName, 
         lastName, 
-        phone || '', 
         homeAddress,
         req.user.id
       ]
@@ -452,7 +450,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
         email: updatedUser.email,
         firstName: updatedUser.first_name,
         lastName: updatedUser.last_name,
-        phone: updatedUser.phone,
         homeAddress: updatedUser.home_address
       }
     });
