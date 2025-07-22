@@ -280,19 +280,90 @@ const Auth = {
 
 // Toast Notifications
 const Toast = {
+  activeToasts: new Set(),
+  messageHistory: new Map(),
+
   show(message, type = 'success', duration = 3000) {
-    const toast = document.getElementById('successToast');
-    const messageElement = toast.querySelector('.toast-message');
+    // Prevent duplicate messages within 1 second
+    const messageKey = `${type}:${message}`;
+    const now = Date.now();
 
-    messageElement.textContent = message;
-    toast.className = `toast active ${type}`;
+    if (this.messageHistory.has(messageKey)) {
+      const lastShown = this.messageHistory.get(messageKey);
+      if (now - lastShown < 1000) {
+        return; // Skip duplicate message
+      }
+    }
 
-    setTimeout(() => {
-      toast.classList.add('slide-out');
-      setTimeout(() => {
-        toast.classList.remove('active', 'slide-out', type);
-      }, 400);
+    this.messageHistory.set(messageKey, now);
+
+    // Clean up old history entries (older than 5 seconds)
+    for (const [key, time] of this.messageHistory.entries()) {
+      if (now - time > 5000) {
+        this.messageHistory.delete(key);
+      }
+    }
+
+    // Create unique ID for this toast
+    const toastId = Date.now() + Math.random();
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.dataset.toastId = toastId;
+    toast.innerHTML = `
+      <div class="toast-content">
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close" onclick="Toast.close('${toastId}')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+    this.activeToasts.add(toastId);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+      toast.classList.add('active');
+    });
+
+    // Auto remove after duration
+    const autoRemoveTimer = setTimeout(() => {
+      this.close(toastId);
     }, duration);
+
+    // Store timer reference for cleanup
+    toast._autoRemoveTimer = autoRemoveTimer;
+  },
+
+  close(toastId) {
+    const toast = document.querySelector(`[data-toast-id="${toastId}"]`);
+    if (!toast || !this.activeToasts.has(toastId)) return;
+
+    // Clear auto-remove timer
+    if (toast._autoRemoveTimer) {
+      clearTimeout(toast._autoRemoveTimer);
+    }
+
+    // Remove from active set
+    this.activeToasts.delete(toastId);
+
+    // Animate out
+    toast.classList.remove('active');
+    toast.classList.add('slide-out');
+
+    // Remove from DOM after animation
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    }, 400);
+  },
+
+  // Clear all toasts
+  clearAll() {
+    this.activeToasts.forEach(toastId => this.close(toastId));
   }
 };
 

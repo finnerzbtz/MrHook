@@ -586,20 +586,59 @@
   z-index: var(--z-tooltip);
   transform: translateX(400px);
   transition: all var(--transition-base);
+  max-width: 350px;
+  margin-bottom: var(--space-2);
 }
 
 .toast.active {
   transform: translateX(0);
 }
 
+.toast.error {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
 .toast-content {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  position: relative;
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
 }
 
 .toast i {
   font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--border-radius);
+  margin-left: var(--space-2);
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.toast-close i {
+  font-size: var(--font-size-sm);
 }
 
 /* Profile & Basket Pages */

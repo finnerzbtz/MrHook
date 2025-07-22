@@ -189,34 +189,40 @@
 
 /* Toast Animations */
 .toast {
-  animation: toastSlideIn 0.4s ease-out;
+  animation: toastSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .toast.slide-out {
-  animation: toastSlideOut 0.4s ease-in forwards;
+  animation: toastSlideOut 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
 }
 
 @keyframes toastSlideIn {
   from {
-    transform: translateX(100%);
+    transform: translateX(100%) scale(0.9);
     opacity: 0;
   }
   to {
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
     opacity: 1;
   }
 }
 
 @keyframes toastSlideOut {
   from {
-    transform: translateX(0);
+    transform: translateX(0) scale(1);
     opacity: 1;
   }
   to {
-    transform: translateX(100%);
+    transform: translateX(100%) scale(0.9);
     opacity: 0;
   }
 }
+
+/* Toast stacking - each subsequent toast appears below the previous one */
+.toast:nth-of-type(1) { top: var(--space-6); }
+.toast:nth-of-type(2) { top: calc(var(--space-6) + 80px); }
+.toast:nth-of-type(3) { top: calc(var(--space-6) + 160px); }
+.toast:nth-of-type(4) { top: calc(var(--space-6) + 240px); }
 
 /* Mobile Menu Animations */
 .mobile-menu {
