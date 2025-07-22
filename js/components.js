@@ -233,23 +233,25 @@ const AuthComponent = {
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
 
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Toast.show('Please fill in all fields', 'error');
       return;
     }
 
-    // Simple address validation - get basic address info
-    const addressLine1 = document.getElementById('addressLine1')?.value.trim() || '';
-    const addressLine2 = document.getElementById('addressLine2')?.value.trim() || '';
-    const city = document.getElementById('city')?.value.trim() || '';
-    const postcode = document.getElementById('postcode')?.value.trim() || '';
-    const county = document.getElementById('county')?.value.trim() || '';
-
-    if (!addressLine1 || !city || !postcode) {
-      Toast.show('Please fill in your address details', 'error');
+    if (password !== confirmPassword) {
+      Toast.show('Passwords do not match', 'error');
       return;
     }
+
+    // Validate address using AddressLookup
+    if (!AddressLookup.validateAddress()) {
+      Toast.show('Please complete your address details', 'error');
+      return;
+    }
+
+    const address = AddressLookup.getFormattedAddress();
 
     if (!isValidEmail(email)) {
       Toast.show('Please enter a valid email address', 'error');
@@ -266,14 +268,8 @@ const AuthComponent = {
         firstName, 
         lastName, 
         email, 
-        phone: '', 
-        address: {
-          line1: addressLine1,
-          line2: addressLine2,
-          city: city,
-          postcode: postcode,
-          county: county
-        }, 
+        phone: address.phone || '', 
+        address: address, 
         password 
       };
       
