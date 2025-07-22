@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Mr Hook - Premium Fishing Supplies</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="mainHeader">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.5 12L10.5 9L13.5 12L10.5 15L7.5 12Z" fill="currentColor"/>
+                        <path d="M13.5 12L16.5 9L19.5 12L16.5 15L13.5 12Z" fill="currentColor"/>
+                        <path d="M1.5 12L4.5 9L7.5 12L4.5 15L1.5 12Z" fill="currentColor"/>
+                    </svg>
+                    <span class="logo-text">Mr Hook</span>
+                </div>
+                <nav class="nav-desktop">
+                    <!-- Navigation will be populated by JavaScript -->
+                </nav>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-content">
+                <!-- Mobile navigation will be populated by JavaScript -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="profile-container">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-info">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-details">
+                            <h1 class="profile-name" id="profileName">Loading...</h1>
+                            <p class="profile-email" id="profileEmail">Loading...</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="editProfileBtn">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                </div>
+
+                <!-- Profile Content -->
+                <div class="profile-content">
+                    <!-- Personal Details Section -->
+                    <div class="profile-section">
+                        <h2 class="section-title">Personal Details</h2>
+                        
+                        <!-- View Mode -->
+                        <div class="details-view" id="detailsView">
+                            <div class="detail-group">
+                                <label>Name</label>
+                                <span id="displayName">Loading...</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Email</label>
+                                <span id="displayEmail">Loading...</span>
+                            </div>
+                            <div class="detail-group">
+                                <label>Address</label>
+                                <span id="displayAddress">Loading...</span>
+                            </div>
+                        </div>
+
+                        <!-- Edit Mode -->
+                        <div class="details-edit hidden" id="detailsEdit">
+                            <form id="updateProfileForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="editFirstName" class="form-label">First Name</label>
+                                        <input type="text" id="editFirstName" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editLastName" class="form-label">Last Name</label>
+                                        <input type="text" id="editLastName" class="form-input" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editEmail" class="form-label">Email Address</label>
+                                    <input type="email" id="editEmail" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editAddressLine1" class="form-label">Address Line 1</label>
+                                    <input type="text" id="editAddressLine1" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="editAddressLine2" class="form-label">Address Line 2 (Optional)</label>
+                                    <input type="text" id="editAddressLine2" class="form-input">
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="editCity" class="form-label">City</label>
+                                        <input type="text" id="editCity" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editPostcode" class="form-label">Postcode</label>
+                                        <input type="text" id="editPostcode" class="form-input" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        Save Changes
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Order History Section -->
+                    <div class="profile-section">
+                        <h2 class="section-title">Order History</h2>
+                        <div class="orders-container" id="ordersContainer">
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Loading orders...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="message-container"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>

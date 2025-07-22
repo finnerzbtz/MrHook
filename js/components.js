@@ -772,3 +772,118 @@ const VideoHoverComponent = {
     image.classList.remove('hidden');
   }
 };
+
+// Navigation Component
+const NavigationComponent = {
+  init() {
+    this.updateNavigation();
+    this.setupEventListeners();
+  },
+
+  updateNavigation() {
+    const currentUser = this.getCurrentUser();
+    const navDesktop = document.querySelector('.nav-desktop');
+    const mobileMenuContent = document.querySelector('.mobile-menu-content');
+
+    if (!navDesktop) return;
+
+    if (currentUser) {
+      // User is logged in
+      navDesktop.innerHTML = `
+        <a href="index.html" class="nav-link active">Products</a>
+        <a href="profile.html" class="nav-link">Profile</a>
+        <a href="basket.html" class="nav-link cart-link">
+          <i class="fas fa-shopping-basket"></i>
+          <span class="cart-count">0</span>
+        </a>
+        <button class="nav-link logout-btn" onclick="NavigationComponent.logout()">Logout</button>
+      `;
+
+      if (mobileMenuContent) {
+        mobileMenuContent.innerHTML = `
+          <a href="index.html" class="mobile-menu-link">
+            <i class="fas fa-fish"></i>
+            Products
+          </a>
+          <a href="profile.html" class="mobile-menu-link">
+            <i class="fas fa-user"></i>
+            Profile
+          </a>
+          <a href="basket.html" class="mobile-menu-link">
+            <i class="fas fa-shopping-basket"></i>
+            Basket <span class="cart-count">0</span>
+          </a>
+          <button class="mobile-menu-link logout-btn" onclick="NavigationComponent.logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        `;
+      }
+    } else {
+      // User is not logged in
+      navDesktop.innerHTML = `
+        <a href="index.html" class="nav-link active">Products</a>
+        <a href="login.html" class="nav-link">Login</a>
+      `;
+
+      if (mobileMenuContent) {
+        mobileMenuContent.innerHTML = `
+          <a href="index.html" class="mobile-menu-link">
+            <i class="fas fa-fish"></i>
+            Products
+          </a>
+          <a href="login.html" class="mobile-menu-link">
+            <i class="fas fa-sign-in-alt"></i>
+            Login
+          </a>
+        `;
+      }
+    }
+
+    this.updateCartCount();
+  },
+
+  setupEventListeners() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenuBtn.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+      });
+    }
+  },
+
+  getCurrentUser() {
+    return JSON.parse(localStorage.getItem('mrHookCurrentUser')) || null;
+  },
+
+  updateCartCount() {
+    const cart = JSON.parse(localStorage.getItem('mrHookCart')) || [];
+    const cartCounts = document.querySelectorAll('.cart-count');
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    cartCounts.forEach(count => {
+      count.textContent = totalItems;
+      count.style.display = totalItems > 0 ? 'inline' : 'none';
+    });
+  },
+
+  logout() {
+    localStorage.removeItem('mrHookCurrentUser');
+    localStorage.removeItem('mrHookCart');
+    window.location.href = 'login.html';
+  }
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize navigation
+  NavigationComponent.init();
+
+  // Initialize video hover functionality
+  VideoHoverComponent.init();
+
+  console.log('🎣 Components initialized');
+});
