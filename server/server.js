@@ -422,6 +422,12 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
       userId: req.user.id
     });
 
+    // First check if user exists
+    const userCheck = await db.query('SELECT id FROM users WHERE id = $1', [req.user.id]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     // Update user in database - only update the fields that exist in the table
     const result = await db.query(
       `UPDATE users 
@@ -437,7 +443,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found after update' });
     }
 
     const updatedUser = result.rows[0];
@@ -455,7 +461,17 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Profile update error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      code: error.code 
+    });
   }
 });
 
