@@ -47,17 +47,15 @@ class AuthSystem {
       passwordResetForm.addEventListener('submit', (e) => this.handlePasswordReset(e));
     }
 
-    // Mobile menu (only on login page)
-    if (window.location.pathname.includes('login.html')) {
-      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-      const mobileMenu = document.getElementById('mobileMenu');
-      
-      if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', () => {
-          mobileMenuBtn.classList.toggle('active');
-          mobileMenu.classList.toggle('active');
-        });
-      }
+    // Mobile menu
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenuBtn.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+      });
     }
   }
 
@@ -229,7 +227,5 @@ class AuthSystem {
   }
 }
 
-// Initialize auth system only
-document.addEventListener('DOMContentLoaded', () => {
-  const auth = new AuthSystem();
-});
+// Initialize auth system
+const auth = new AuthSystem();
