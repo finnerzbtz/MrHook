@@ -4,121 +4,19 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const Database = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// Initialize database
+const db = new Database();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
-
-// In-memory storage (replace with database in production)
-let users = [
-  {
-    id: 1,
-    email: 'john.smith@email.com',
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password123
-    firstName: 'John',
-    lastName: 'Smith',
-    phone: '07123456789',
-    address: {
-      line1: '123 Fishing Lane',
-      line2: '',
-      city: 'Portsmouth',
-      postcode: 'PO1 2AB',
-      county: 'Hampshire'
-    },
-    createdAt: new Date()
-  }
-];
-
-let products = [
-  {
-    id: 1,
-    name: 'Premium Carbon Fiber Rod',
-    type: 'Fishing Rods',
-    price: 149.99,
-    image: 'assets/pexels-cottonbro-4822295.jpg',
-    description: 'Professional grade carbon fiber fishing rod with enhanced sensitivity and durability.',
-    stock: 15,
-    category: 'rods'
-  },
-  {
-    id: 2,
-    name: 'Professional Hook Set',
-    type: 'Hooks',
-    price: 24.99,
-    image: 'assets/pexels-karolina-grabowska-6478094.jpg',
-    description: 'Complete set of professional fishing hooks in various sizes.',
-    stock: 30,
-    category: 'hooks'
-  },
-  {
-    id: 3,
-    name: 'Fresh Live Bait Collection',
-    type: 'Bait',
-    price: 18.99,
-    image: 'assets/pexels-karolina-grabowska-6478141.jpg',
-    description: 'Premium fresh bait collection for the best fishing experience.',
-    stock: 25,
-    category: 'bait'
-  },
-  {
-    id: 4,
-    name: 'Tackle Storage Box',
-    type: 'Containers',
-    price: 39.99,
-    image: 'assets/pexels-lum3n-44775-294674.jpg',
-    description: 'Waterproof tackle box with multiple compartments.',
-    stock: 20,
-    category: 'containers'
-  },
-  {
-    id: 5,
-    name: 'Professional Fishing Line',
-    type: 'Other',
-    price: 12.99,
-    image: 'assets/pexels-pablo-gutierrez-2064903-3690705.jpg',
-    description: 'High-strength fishing line suitable for all fishing conditions.',
-    stock: 50,
-    category: 'other'
-  },
-  {
-    id: 6,
-    name: 'Spinning Reel Combo',
-    type: 'Fishing Rods',
-    price: 89.99,
-    image: 'assets/pexels-jplenio-1105386.jpg',
-    description: 'Complete spinning reel and rod combination for beginners.',
-    stock: 12,
-    category: 'rods'
-  },
-  {
-    id: 7,
-    name: 'Bait Bucket Pro',
-    type: 'Containers',
-    price: 29.99,
-    image: 'assets/pexels-pixabay-39854.jpg',
-    description: 'Professional bait bucket with aeration system.',
-    stock: 18,
-    category: 'containers'
-  },
-  {
-    id: 8,
-    name: 'Multi-Tool Fisher',
-    type: 'Other',
-    price: 34.99,
-    image: 'assets/pexels-brent-keane-181485-1687242.jpg',
-    description: 'Essential fishing multi-tool with pliers, knife, and hook remover.',
-    stock: 22,
-    category: 'other'
-  }
-];
-
-let orders = [];
-let carts = {};
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -141,9 +39,13 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, firstName, lastName, phone, address } = req.body;
 
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
     // Check if user already exists
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
+    const existingResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingResult.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -151,18 +53,13 @@ app.post('/api/auth/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const newUser = {
-      id: users.length + 1,
-      email,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      phone,
-      address,
-      createdAt: new Date()
-    };
+    const result = await db.query(
+      `INSERT INTO users (email, password, first_name, last_name, phone, address_line1, address_line2, city, postcode, county) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, first_name, last_name, phone, address_line1, address_line2, city, postcode, county`,
+      [email, hashedPassword, firstName, lastName, phone, address?.line1 || '', address?.line2 || '', address?.city || '', address?.postcode || '', address?.county || '']
+    );
 
-    users.push(newUser);
+    const newUser = result.rows[0];
 
     // Generate JWT token
     const token = jwt.sign(
@@ -177,13 +74,20 @@ app.post('/api/auth/register', async (req, res) => {
       user: {
         id: newUser.id,
         email: newUser.email,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        firstName: newUser.first_name,
+        lastName: newUser.last_name,
         phone: newUser.phone,
-        address: newUser.address
+        address: {
+          line1: newUser.address_line1,
+          line2: newUser.address_line2,
+          city: newUser.city,
+          postcode: newUser.postcode,
+          county: newUser.county
+        }
       }
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -192,11 +96,17 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
     // Find user
-    const user = users.find(u => u.email === email);
-    if (!user) {
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
+
+    const user = result.rows[0];
 
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -217,83 +127,183 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name,
+        lastName: user.last_name,
         phone: user.phone,
-        address: user.address
+        address: {
+          line1: user.address_line1,
+          line2: user.address_line2,
+          city: user.city,
+          postcode: user.postcode,
+          county: user.county
+        }
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 // Product Routes
-app.get('/api/products', (req, res) => {
-  const { category, search, minPrice, maxPrice } = req.query;
-  let filteredProducts = [...products];
+app.get('/api/products', async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
 
-  if (category && category !== 'all') {
-    filteredProducts = filteredProducts.filter(p => p.category === category);
+    const { category, search, minPrice, maxPrice } = req.query;
+    let query = 'SELECT * FROM products WHERE 1=1';
+    const params = [];
+    let paramCount = 0;
+
+    if (category && category !== 'all') {
+      paramCount++;
+      query += ` AND category = $${paramCount}`;
+      params.push(category);
+    }
+
+    if (search) {
+      paramCount++;
+      query += ` AND (LOWER(name) LIKE $${paramCount} OR LOWER(type) LIKE $${paramCount})`;
+      params.push(`%${search.toLowerCase()}%`);
+    }
+
+    if (minPrice) {
+      paramCount++;
+      query += ` AND price >= $${paramCount}`;
+      params.push(parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      paramCount++;
+      query += ` AND price <= $${paramCount}`;
+      params.push(parseFloat(maxPrice));
+    }
+
+    const result = await db.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Products fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-
-  if (search) {
-    filteredProducts = filteredProducts.filter(p => 
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.type.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-
-  if (minPrice) {
-    filteredProducts = filteredProducts.filter(p => p.price >= parseFloat(minPrice));
-  }
-
-  if (maxPrice) {
-    filteredProducts = filteredProducts.filter(p => p.price <= parseFloat(maxPrice));
-  }
-
-  res.json(filteredProducts);
 });
 
-app.get('/api/products/:id', (req, res) => {
-  const product = products.find(p => p.id === parseInt(req.params.id));
-  if (!product) {
-    return res.status(404).json({ message: 'Product not found' });
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    const result = await db.query('SELECT * FROM products WHERE id = $1', [parseInt(req.params.id)]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Product fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-  res.json(product);
 });
 
 // Cart Routes
-app.get('/api/cart', authenticateToken, (req, res) => {
-  const userCart = carts[req.user.id] || [];
-  res.json(userCart);
+app.get('/api/cart', authenticateToken, async (req, res) => {
+  try {
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
+
+    const result = await db.query(`
+      SELECT ci.*, p.name, p.type, p.price, p.image, p.description, p.stock, p.category
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.user_id = $1
+    `, [req.user.id]);
+
+    const cart = result.rows.map(row => ({
+      productId: row.product_id,
+      quantity: row.quantity,
+      product: {
+        id: row.product_id,
+        name: row.name,
+        type: row.type,
+        price: parseFloat(row.price),
+        image: row.image,
+        description: row.description,
+        stock: row.stock,
+        category: row.category
+      }
+    }));
+
+    res.json(cart);
+  } catch (error) {
+    console.error('Cart fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
-app.post('/api/cart/add', authenticateToken, (req, res) => {
-  const { productId, quantity } = req.body;
-  const product = products.find(p => p.id === productId);
-  
-  if (!product) {
-    return res.status(404).json({ message: 'Product not found' });
-  }
+app.post('/api/cart/add', authenticateToken, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
 
-  if (!carts[req.user.id]) {
-    carts[req.user.id] = [];
-  }
+    if (!db.pool) {
+      return res.status(500).json({ message: 'Database not available' });
+    }
 
-  const existingItem = carts[req.user.id].find(item => item.productId === productId);
-  
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    carts[req.user.id].push({
-      productId,
-      quantity,
-      product
-    });
-  }
+    // Check if product exists
+    const productResult = await db.query('SELECT * FROM products WHERE id = $1', [productId]);
+    if (productResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
 
-  res.json({ message: 'Item added to cart', cart: carts[req.user.id] });
+    // Check if item already in cart
+    const existingResult = await db.query(
+      'SELECT * FROM cart_items WHERE user_id = $1 AND product_id = $2',
+      [req.user.id, productId]
+    );
+
+    if (existingResult.rows.length > 0) {
+      // Update quantity
+      await db.query(
+        'UPDATE cart_items SET quantity = quantity + $1 WHERE user_id = $2 AND product_id = $3',
+        [quantity, req.user.id, productId]
+      );
+    } else {
+      // Insert new item
+      await db.query(
+        'INSERT INTO cart_items (user_id, product_id, quantity) VALUES ($1, $2, $3)',
+        [req.user.id, productId, quantity]
+      );
+    }
+
+    // Fetch updated cart
+    const cartResult = await db.query(`
+      SELECT ci.*, p.name, p.type, p.price, p.image, p.description, p.stock, p.category
+      FROM cart_items ci
+      JOIN products p ON ci.product_id = p.id
+      WHERE ci.user_id = $1
+    `, [req.user.id]);
+
+    const cart = cartResult.rows.map(row => ({
+      productId: row.product_id,
+      quantity: row.quantity,
+      product: {
+        id: row.product_id,
+        name: row.name,
+        type: row.type,
+        price: parseFloat(row.price),
+        image: row.image,
+        description: row.description,
+        stock: row.stock,
+        category: row.category
+      }
+    }));
+
+    res.json({ message: 'Item added to cart', cart });
+  } catch (error) {
+    console.error('Cart add error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 
 app.put('/api/cart/update', authenticateToken, (req, res) => {
@@ -416,7 +426,19 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
-  console.log(`🌐 Access your app at: http://localhost:${PORT}`);
-});
+// Initialize database and start server
+async function startServer() {
+  try {
+    await db.initTables();
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🎣 Mr Hook Backend Server running on port ${PORT}`);
+      console.log(`🌐 Access your app at: http://localhost:${PORT}`);
+      console.log(`📊 Database: ${db.pool ? 'PostgreSQL Connected' : 'In-memory fallback'}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
