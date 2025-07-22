@@ -69,13 +69,13 @@ const Cart = {
   add(productId, quantity = 1) {
     const cart = this.get();
     const existingItem = cart.find(item => item.productId === productId);
-    
+
     if (existingItem) {
       existingItem.quantity += quantity;
     } else {
       cart.push({ productId, quantity });
     }
-    
+
     Storage.set('cart', cart);
     this.updateCartUI();
     return cart;
@@ -93,7 +93,7 @@ const Cart = {
   updateQuantity(productId, quantity) {
     const cart = this.get();
     const item = cart.find(item => item.productId === productId);
-    
+
     if (item) {
       if (quantity <= 0) {
         this.remove(productId);
@@ -103,7 +103,7 @@ const Cart = {
         this.updateCartUI();
       }
     }
-    
+
     return cart;
   },
 
@@ -178,7 +178,74 @@ const Auth = {
 
   // Check if user is logged in
   isLoggedIn() {
-    return !!this.getCurrentUser();
+    return !!Storage.get('currentUser');
+  },
+
+  // Show forgot password form
+  showForgotPassword(event) {
+    event.preventDefault();
+    App.showPage('reset');
+  },
+
+  // Handle password reset request
+  resetPassword(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('resetEmail').value;
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.email === email);
+
+    if (!user) {
+      Toast.show('No account found with that email address', 'error');
+      return;
+    }
+
+    // Simulate sending reset email
+    Toast.show('Password reset link sent to your email!');
+
+    // For demo purposes, immediately show the new password form
+    // In a real app, this would be handled via email link with token
+    setTimeout(() => {
+      localStorage.setItem('resetEmail', email);
+      App.showPage('newPassword');
+    }, 2000);
+  },
+
+  // Set new password
+  setNewPassword(event) {
+    event.preventDefault();
+
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmNewPassword').value;
+    const resetEmail = localStorage.getItem('resetEmail');
+
+    if (newPassword !== confirmPassword) {
+      Toast.show('Passwords do not match', 'error');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      Toast.show('Password must be at least 6 characters', 'error');
+      return;
+    }
+
+    // Update user password
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const userIndex = users.findIndex(u => u.email === resetEmail);
+
+    if (userIndex !== -1) {
+      users[userIndex].password = newPassword;
+      localStorage.setItem('users', JSON.stringify(users));
+      localStorage.removeItem('resetEmail');
+
+      Toast.show('Password updated successfully!');
+
+      setTimeout(() => {
+        App.showPage('login');
+      }, 2000);
+    } else {
+      Toast.show('Error updating password', 'error');
+    }
   }
 };
 
@@ -187,10 +254,10 @@ const Toast = {
   show(message, type = 'success', duration = 3000) {
     const toast = document.getElementById('successToast');
     const messageElement = toast.querySelector('.toast-message');
-    
+
     messageElement.textContent = message;
     toast.className = `toast active ${type}`;
-    
+
     setTimeout(() => {
       toast.classList.add('slide-out');
       setTimeout(() => {
@@ -296,10 +363,10 @@ function animateOnScroll() {
 function initUtils() {
   // Update cart UI on page load
   Cart.updateCartUI();
-  
+
   // Add scroll listener for animations
   window.addEventListener('scroll', throttle(animateOnScroll, 100));
-  
+
   // Initialize animations
   setTimeout(animateOnScroll, 100);
-} 
+}
