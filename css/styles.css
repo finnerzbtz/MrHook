@@ -635,4 +635,18 @@ a:hover {
   .category-subtitle {
     font-size: var(--font-size-base);
   }
+  
+  /* Mobile video autoplay enhancements */
+  .category-video {
+    transition: opacity 350ms ease-in-out;
+  }
+  
+  .category-video.playing {
+    opacity: 1;
+    transition: opacity 350ms ease-in-out;
+  }
+  
+  .category-image.hidden {
+    transition: opacity 350ms ease-in-out;
+  }
 } 

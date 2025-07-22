@@ -506,58 +506,79 @@ function resetFilters() {
 
 // Video Hover Component
 const VideoHoverComponent = {
-  hoverTimers: new Map(),
+  observedVideos: new Set(),
 
   // Initialize video hover functionality
   init() {
+    // Check if device is mobile/tablet
+    const isMobile = window.innerWidth <= 768;
+    
     document.querySelectorAll('.category-card').forEach(card => {
       const video = card.querySelector('.category-video');
       const image = card.querySelector('.category-image');
       
       if (!video || !image) return;
 
-      // Mouse enter - start timer for video
-      card.addEventListener('mouseenter', () => {
-        this.startVideoTimer(card, video, image);
-      });
+      if (isMobile) {
+        // On mobile: autoplay videos when they come into view
+        this.setupIntersectionObserver(video, image);
+      } else {
+        // On desktop: immediate hover to play videos
+        card.addEventListener('mouseenter', () => {
+          this.playVideo(video, image);
+        });
 
-      // Mouse leave - stop timer and reset to image
-      card.addEventListener('mouseleave', () => {
-        this.stopVideoTimer(card, video, image);
-      });
+        card.addEventListener('mouseleave', () => {
+          this.showImage(video, image);
+        });
+      }
+    });
+
+    // Listen for window resize to handle mobile/desktop switches
+    window.addEventListener('resize', () => {
+      if (window.innerWidth <= 768 && this.observedVideos.size === 0) {
+        // Switched to mobile view
+        this.init();
+      } else if (window.innerWidth > 768) {
+        // Switched to desktop view - clean up observers
+        this.cleanupObservers();
+      }
     });
   },
 
-  // Start 2-second timer before playing video
-  startVideoTimer(card, video, image) {
-    const cardId = card.dataset.category;
-    
-    // Clear any existing timer
-    if (this.hoverTimers.has(cardId)) {
-      clearTimeout(this.hoverTimers.get(cardId));
-    }
+  // Setup intersection observer for mobile autoplay
+  setupIntersectionObserver(video, image) {
+    if (this.observedVideos.has(video)) return;
 
-    // Set 1-second delay timer
-    const timer = setTimeout(() => {
-      this.playVideo(video, image);
-      this.hoverTimers.delete(cardId);
-    }, 1000);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // Video is in view - play it
+          this.playVideo(video, image);
+        } else {
+          // Video is out of view - stop and reset
+          this.showImage(video, image);
+        }
+      });
+    }, {
+      threshold: 0.5, // Play when 50% of video is visible
+      rootMargin: '0px 0px -10% 0px' // Slight offset to prevent premature triggering
+    });
 
-    this.hoverTimers.set(cardId, timer);
+    observer.observe(video);
+    this.observedVideos.add(video);
+    video._observer = observer; // Store reference for cleanup
   },
 
-  // Stop timer and reset to image
-  stopVideoTimer(card, video, image) {
-    const cardId = card.dataset.category;
-    
-    // Clear timer if it exists
-    if (this.hoverTimers.has(cardId)) {
-      clearTimeout(this.hoverTimers.get(cardId));
-      this.hoverTimers.delete(cardId);
-    }
-
-    // Reset to image
-    this.showImage(video, image);
+  // Clean up intersection observers
+  cleanupObservers() {
+    this.observedVideos.forEach(video => {
+      if (video._observer) {
+        video._observer.disconnect();
+        delete video._observer;
+      }
+    });
+    this.observedVideos.clear();
   },
 
   // Play video and hide image
