@@ -1162,7 +1162,15 @@ function closeProductModal() {
   }
 }
 
-// Profile Component
+// CRITICAL: Export functions globally for onclick handlers and component access
+window.ProductsComponent = {
+  init: ProductsComponent.init.bind(ProductsComponent),
+  loadProducts: ProductsComponent.loadProducts.bind(ProductsComponent),
+  showProductDetail: ProductsComponent.showProductDetail.bind(ProductsComponent),
+  updateQuantity: ProductsComponent.updateQuantity.bind(ProductsComponent),
+  addToCart: ProductsComponent.addToCart.bind(ProductsComponent),
+  resetFilters: ProductsComponent.resetFilters.bind(ProductsComponent),
+  applyFilters: ProductsComponent.applyFilters.bind(ProductsComponent)
 };
 
 window.AuthComponent = AuthComponent;
