@@ -1,7 +1,7 @@
 // Product Categories - for frontend display only
 const categories = {
-  'fishing-rods': 'Fishing Rods',
-  'hooks': 'Hooks',
+  'rods': 'Fishing Rods',
+  'hooks': 'Hooks', 
   'bait': 'Bait',
   'containers': 'Containers',
   'other': 'Other'

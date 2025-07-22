@@ -15,7 +15,7 @@ const ProductsComponent = {
   // Load products from backend API
   async loadProducts(filters = {}) {
     if (this.isLoading) return;
-    
+
     this.isLoading = true;
     this.showLoadingState();
 
@@ -115,7 +115,7 @@ const ProductsComponent = {
     try {
       // Get product details from backend
       const product = await API.getProduct(productId);
-      
+
       const modal = document.getElementById('productModal');
       const detail = document.getElementById('productDetail');
 
@@ -181,10 +181,10 @@ const ProductsComponent = {
     try {
       // Add to backend cart
       await API.addToCart(productId, quantity);
-      
+
       // Update UI cart count
       await this.updateCartUIFromBackend();
-      
+
       const product = this.allProducts.find(p => p.id === productId);
       Toast.show(`${product?.name || 'Product'} added to basket!`);
 
@@ -200,7 +200,7 @@ const ProductsComponent = {
     try {
       const cart = await API.getCart();
       const count = cart.reduce((total, item) => total + item.quantity, 0);
-      
+
       const cartElements = document.querySelectorAll('.cart-count, .mobile-cart-count');
       cartElements.forEach(element => {
         element.textContent = count;
@@ -257,18 +257,13 @@ async function filterByCategory(categoryType) {
   let filterValue = '';
   switch(categoryType) {
     case 'fishing-rods':
-      filterValue = 'fishing-rods';
+      filterValue = 'rods';
       break;
     case 'bait-hooks':
-      // For combined categories, we'll need to handle this specially
-      // Clear category filter and let the backend handle the search
-      filterValue = '';
-      if (searchInput) searchInput.value = 'bait hooks';
+      filterValue = 'bait';
       break;
     case 'containers-more':
-      // For combined categories, use search instead
-      filterValue = '';
-      if (searchInput) searchInput.value = 'containers';
+      filterValue = 'containers';
       break;
     default:
       filterValue = '';
@@ -324,7 +319,7 @@ const AuthComponent = {
 
     try {
       const response = await API.login(email, password);
-      
+
       const userName = response.user.firstName || response.user.first_name || 'User';
       Toast.show(`Welcome back, ${userName}!`);
       App.updateAuthUI();
@@ -390,9 +385,9 @@ const AuthComponent = {
         homeAddress,
         password 
       };
-      
+
       const response = await API.register(userData);
-      
+
       Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
@@ -638,7 +633,7 @@ const ProfileComponent = {
           <label for="editHomeAddress">Home Address</label>
           <textarea id="editHomeAddress" required class="form-input" rows="3" placeholder="Enter your full home address">${escapeHtml(homeAddress)}</textarea>
         </div>
-        
+
         <div class="profile-actions">
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-save"></i>
@@ -702,7 +697,7 @@ const ProfileComponent = {
 
       this.isEditing = false;
       Toast.show('Profile updated successfully!');
-      
+
       // Refresh the profile display
       await this.render();
     } catch (error) {
@@ -731,12 +726,12 @@ const BasketComponent = {
 
     const basketContent = document.getElementById('basketContent');
     const basketSummary = document.getElementById('basketSummary');
-    
+
     if (!basketContent || !basketSummary) {
       console.error('Basket elements not found');
       return;
     }
-    
+
     // Show loading state
     basketContent.innerHTML = '<div class="loading-spinner"><div class="spinner-ring"></div><p>Loading your basket...</p></div>';
     basketSummary.innerHTML = '';
@@ -746,7 +741,7 @@ const BasketComponent = {
       console.log('Loading cart from API...');
       const cart = await API.getCart();
       console.log('Cart loaded from API:', cart.length, 'items');
-      
+
       this.renderBasketContent(basketContent, basketSummary, cart);
     } catch (error) {
       console.error('Failed to load cart from API:', error);
@@ -843,16 +838,16 @@ const BasketComponent = {
       } else {
         await API.updateCart(productId, newQuantity);
       }
-      
+
       // Update cart UI
       await Cart.updateCartUI();
-      
+
       // Re-render basket
       await this.render();
     } catch (error) {
       console.error('Failed to update cart:', error);
       Toast.show('Failed to update cart. Please try again.', 'error');
-      
+
       // Reset loading state
       const itemControls = document.querySelector(`[onclick*="${productId}"]`)?.closest('.basket-item')?.querySelector('.quantity-controls');
       if (itemControls) {
@@ -872,18 +867,18 @@ const BasketComponent = {
       }
 
       await API.removeFromCart(productId);
-      
+
       // Update cart UI
       await Cart.updateCartUI();
-      
+
       Toast.show('Item removed from basket');
-      
+
       // Re-render basket
       await this.render();
     } catch (error) {
       console.error('Failed to remove from cart:', error);
       Toast.show('Failed to remove item. Please try again.', 'error');
-      
+
       // Reset loading state
       const itemElement = document.querySelector(`[onclick*="removeItem(${productId})"]`)?.closest('.basket-item');
       if (itemElement) {
@@ -941,7 +936,7 @@ const BasketComponent = {
 
     } catch (error) {
       console.error('Order placement failed:', error);
-      
+
       // Handle specific error types
       if (error.message.includes('401') || error.message.includes('403')) {
         Toast.show('Authentication expired. Please login again.', 'error');
@@ -952,7 +947,7 @@ const BasketComponent = {
       } else {
         Toast.show('Failed to place order. Please try again.', 'error');
       }
-    } finally {
+    } finally{
       // Reset button state
       const checkoutBtn = document.querySelector('.btn-checkout');
       if (checkoutBtn) {
@@ -1060,3 +1055,32 @@ const VideoHoverComponent = {
     image.classList.remove('hidden');
   }
 };
+
+// Category filtering function for homepage buttons
+function filterByCategory(category) {
+  // Switch to products page and apply filter
+  App.showPage('home');
+
+  // Apply the category filter
+  const categorySelect = document.getElementById('categoryFilter');
+  if (categorySelect) {
+    categorySelect.value = category;
+  }
+
+  // Trigger filter update
+  ProductsComponent.applyFilters();
+}
+
+// Export functions
+window.ProductsComponent = {
+  init: ProductsComponent.init,
+  loadProducts: ProductsComponent.loadProducts,
+  showProductDetail: ProductsComponent.showProductDetail,
+  updateQuantity: ProductsComponent.updateQuantity,
+  addToCart: ProductsComponent.addToCart,
+  resetFilters: ProductsComponent.resetFilters,
+  applyFilters: ProductsComponent.applyFilters
+};
+
+// Make filterByCategory globally available
+window.filterByCategory = filterByCategory;
