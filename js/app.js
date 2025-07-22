@@ -4,7 +4,6 @@ const App = {
 
   // Initialize the application
   init() {
-    this.initLoadingScreen();
     this.setupEventListeners();
     this.updateAuthUI();
     this.showPage('home');
@@ -17,19 +16,6 @@ const App = {
     VideoHoverComponent.init();
 
     console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
-  },
-
-  // Initialize loading screen
-  initLoadingScreen() {
-    const loadingScreen = document.getElementById('loadingScreen');
-
-    // Hide loading screen after a short delay
-    setTimeout(() => {
-      loadingScreen.classList.add('fade-out');
-      setTimeout(() => {
-        loadingScreen.style.display = 'none';
-      }, 350);
-    }, 1500);
   },
 
   // Setup all event listeners
@@ -309,8 +295,19 @@ window.addEventListener('unhandledrejection', (event) => {
   Toast.show('An unexpected error occurred.', 'error');
 });
 
+// Hide loading screen function
+function hideLoadingScreen() {
+  const loadingScreen = document.getElementById('loadingScreen');
+  if (loadingScreen) {
+    loadingScreen.classList.add('fade-out');
+    setTimeout(() => {
+      loadingScreen.style.display = 'none';
+    }, 350);
+  }
+}
+
 // Initialize app
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   console.log('🎣 Mr Hook Fishing Supplies - App Initialized');
 
   try {
