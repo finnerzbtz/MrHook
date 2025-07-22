@@ -126,17 +126,46 @@ const ProductsComponent = {
     const grid = document.getElementById('productsGrid');
     if (!grid) return;
 
-    grid.innerHTML = `
-      <div class="error-products">
-        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;"></i>
-        <h3>Oops! Something went wrong</h3>
-        <p>${message}</p>
-        <button class="btn btn-primary" onclick="ProductsComponent.loadProducts()">
-          <i class="fas fa-redo"></i>
-          Try Again
-        </button>
-      </div>
-    `;
+    // Clear existing content
+    grid.innerHTML = '';
+
+    // Create error container
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-products';
+
+    // Create icon
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-exclamation-triangle';
+    icon.style.cssText = 'font-size: 3rem; color: var(--secondary-color); margin-bottom: 1rem;';
+
+    // Create heading
+    const heading = document.createElement('h3');
+    heading.textContent = 'Oops! Something went wrong';
+
+    // Create message paragraph with escaped text
+    const paragraph = document.createElement('p');
+    paragraph.textContent = message; // textContent automatically escapes
+
+    // Create retry button
+    const button = document.createElement('button');
+    button.className = 'btn btn-primary';
+    button.onclick = () => ProductsComponent.loadProducts();
+
+    const buttonIcon = document.createElement('i');
+    buttonIcon.className = 'fas fa-redo';
+
+    const buttonText = document.createTextNode(' Try Again');
+
+    button.appendChild(buttonIcon);
+    button.appendChild(buttonText);
+
+    // Assemble the error display
+    errorDiv.appendChild(icon);
+    errorDiv.appendChild(heading);
+    errorDiv.appendChild(paragraph);
+    errorDiv.appendChild(button);
+
+    grid.appendChild(errorDiv);
   },
 
   // Render products grid
@@ -156,37 +185,93 @@ const ProductsComponent = {
 
     if (this.filteredProducts.length === 0 && !this.isLoading) {
       console.log('No products to show, displaying no-products message');
-      grid.innerHTML = `
-        <div class="no-products">
-          <i class="fas fa-fish" style="font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;"></i>
-          <h3>No products found</h3>
-          <p>Try adjusting your filters to see more products.</p>
-          <button class="btn btn-secondary" onclick="ProductsComponent.resetFilters()">
-            Reset Filters
-          </button>
-        </div>
-      `;
+      
+      // Clear existing content
+      grid.innerHTML = '';
+
+      // Create no products container
+      const noProductsDiv = document.createElement('div');
+      noProductsDiv.className = 'no-products';
+
+      // Create icon
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-fish';
+      icon.style.cssText = 'font-size: 3rem; color: var(--gray-400); margin-bottom: 1rem;';
+
+      // Create heading
+      const heading = document.createElement('h3');
+      heading.textContent = 'No products found';
+
+      // Create message paragraph
+      const paragraph = document.createElement('p');
+      paragraph.textContent = 'Try adjusting your filters to see more products.';
+
+      // Create reset button
+      const button = document.createElement('button');
+      button.className = 'btn btn-secondary';
+      button.onclick = () => ProductsComponent.resetFilters();
+      button.textContent = 'Reset Filters';
+
+      // Assemble the no products display
+      noProductsDiv.appendChild(icon);
+      noProductsDiv.appendChild(heading);
+      noProductsDiv.appendChild(paragraph);
+      noProductsDiv.appendChild(button);
+
+      grid.appendChild(noProductsDiv);
       return;
     }
 
     console.log('Building product cards HTML...');
     
-    const productCards = this.filteredProducts.map((product, index) => {
-      const card = `
-        <div class="product-card stagger-item" data-product-id="${product.id}" style="animation-delay: ${index * 0.1}s">
-          <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-image" loading="lazy">
-          <div class="product-info">
-            <h3 class="product-name">${escapeHtml(product.name)}</h3>
-            <p class="product-category">${formatCategory(product.category || product.type)}</p>
-            <div class="product-price">${formatPrice(product.price)}</div>
-          </div>
-        </div>
-      `;
+    // Clear existing content
+    grid.innerHTML = '';
+
+    this.filteredProducts.forEach((product, index) => {
+      // Create product card
+      const card = document.createElement('div');
+      card.className = 'product-card stagger-item';
+      card.dataset.productId = product.id;
+      card.style.animationDelay = `${index * 0.1}s`;
+
+      // Create image
+      const img = document.createElement('img');
+      img.src = product.image;
+      img.alt = product.name; // automatically escaped by browser
+      img.className = 'product-image';
+      img.loading = 'lazy';
+
+      // Create product info container
+      const productInfo = document.createElement('div');
+      productInfo.className = 'product-info';
+
+      // Create product name
+      const productName = document.createElement('h3');
+      productName.className = 'product-name';
+      productName.textContent = product.name; // automatically escaped
+
+      // Create product category
+      const productCategory = document.createElement('p');
+      productCategory.className = 'product-category';
+      productCategory.textContent = formatCategory(product.category || product.type);
+
+      // Create product price
+      const productPrice = document.createElement('div');
+      productPrice.className = 'product-price';
+      productPrice.textContent = formatPrice(product.price);
+
+      // Assemble the card
+      productInfo.appendChild(productName);
+      productInfo.appendChild(productCategory);
+      productInfo.appendChild(productPrice);
+
+      card.appendChild(img);
+      card.appendChild(productInfo);
+
+      grid.appendChild(card);
+
       console.log(`Created card for product ${product.id}: ${product.name}`);
-      return card;
     });
-    
-    grid.innerHTML = productCards.join('');
     console.log(`Set grid innerHTML with ${productCards.length} cards`);
 
     // Add click listeners to product cards
@@ -236,51 +321,153 @@ const ProductsComponent = {
         console.log('Cleared any blocking inline styles');
       }
 
-      // Populate product detail page 
-      container.innerHTML = `
-        <div class="product-detail-layout">
-          <div class="product-detail-image-section">
-            <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
-          </div>
-          
-          <div class="product-detail-info-section">
-            <h1 class="product-detail-name">${escapeHtml(product.name)}</h1>
-            <p class="product-detail-category">${formatCategory(product.category || product.type)}</p>
-            <div class="product-detail-price">${formatPrice(product.price)}</div>
-            
-            <div class="product-detail-description">
-              <h3>Description</h3>
-              <p>${escapeHtml(product.description)}</p>
-            </div>
-            
-            <div class="product-detail-actions">
-              <div class="quantity-selector">
-                <label for="productQuantity">Quantity:</label>
-                <div class="quantity-controls">
-                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(-1)">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <input type="number" value="1" min="1" max="99" class="quantity-input" id="productQuantity">
-                  <button type="button" class="quantity-btn" onclick="ProductsComponent.updateQuantity(1)">
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
-              </div>
-              
-              <div class="product-actions">
-                <button class="btn btn-primary btn-add-to-cart" onclick="ProductsComponent.addToCart(${productId})">
-                  <i class="fas fa-shopping-basket"></i>
-                  Add to Basket
-                </button>
-                <button class="btn btn-outline" onclick="App.showPage('home')">
-                  <i class="fas fa-arrow-left"></i>
-                  Back to search
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      // Clear existing content
+      container.innerHTML = '';
+
+      // Create main layout container
+      const layout = document.createElement('div');
+      layout.className = 'product-detail-layout';
+
+      // Create image section
+      const imageSection = document.createElement('div');
+      imageSection.className = 'product-detail-image-section';
+
+      const productImage = document.createElement('img');
+      productImage.src = product.image;
+      productImage.alt = product.name; // automatically escaped
+      productImage.className = 'product-detail-image';
+
+      imageSection.appendChild(productImage);
+
+      // Create info section
+      const infoSection = document.createElement('div');
+      infoSection.className = 'product-detail-info-section';
+
+      // Product name
+      const productName = document.createElement('h1');
+      productName.className = 'product-detail-name';
+      productName.textContent = product.name;
+
+      // Product category
+      const productCategory = document.createElement('p');
+      productCategory.className = 'product-detail-category';
+      productCategory.textContent = formatCategory(product.category || product.type);
+
+      // Product price
+      const productPrice = document.createElement('div');
+      productPrice.className = 'product-detail-price';
+      productPrice.textContent = formatPrice(product.price);
+
+      // Description section
+      const descriptionDiv = document.createElement('div');
+      descriptionDiv.className = 'product-detail-description';
+
+      const descriptionHeading = document.createElement('h3');
+      descriptionHeading.textContent = 'Description';
+
+      const descriptionText = document.createElement('p');
+      descriptionText.textContent = product.description;
+
+      descriptionDiv.appendChild(descriptionHeading);
+      descriptionDiv.appendChild(descriptionText);
+
+      // Actions section
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'product-detail-actions';
+
+      // Quantity selector
+      const quantitySelector = document.createElement('div');
+      quantitySelector.className = 'quantity-selector';
+
+      const quantityLabel = document.createElement('label');
+      quantityLabel.setAttribute('for', 'productQuantity');
+      quantityLabel.textContent = 'Quantity:';
+
+      const quantityControls = document.createElement('div');
+      quantityControls.className = 'quantity-controls';
+
+      // Minus button
+      const minusBtn = document.createElement('button');
+      minusBtn.type = 'button';
+      minusBtn.className = 'quantity-btn';
+      minusBtn.onclick = () => ProductsComponent.updateQuantity(-1);
+
+      const minusIcon = document.createElement('i');
+      minusIcon.className = 'fas fa-minus';
+      minusBtn.appendChild(minusIcon);
+
+      // Quantity input
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.value = '1';
+      quantityInput.min = '1';
+      quantityInput.max = '99';
+      quantityInput.className = 'quantity-input';
+      quantityInput.id = 'productQuantity';
+
+      // Plus button
+      const plusBtn = document.createElement('button');
+      plusBtn.type = 'button';
+      plusBtn.className = 'quantity-btn';
+      plusBtn.onclick = () => ProductsComponent.updateQuantity(1);
+
+      const plusIcon = document.createElement('i');
+      plusIcon.className = 'fas fa-plus';
+      plusBtn.appendChild(plusIcon);
+
+      quantityControls.appendChild(minusBtn);
+      quantityControls.appendChild(quantityInput);
+      quantityControls.appendChild(plusBtn);
+
+      quantitySelector.appendChild(quantityLabel);
+      quantitySelector.appendChild(quantityControls);
+
+      // Product actions
+      const productActions = document.createElement('div');
+      productActions.className = 'product-actions';
+
+      // Add to cart button
+      const addToCartBtn = document.createElement('button');
+      addToCartBtn.className = 'btn btn-primary btn-add-to-cart';
+      addToCartBtn.onclick = () => ProductsComponent.addToCart(productId);
+
+      const cartIcon = document.createElement('i');
+      cartIcon.className = 'fas fa-shopping-basket';
+      const cartText = document.createTextNode(' Add to Basket');
+      
+      addToCartBtn.appendChild(cartIcon);
+      addToCartBtn.appendChild(cartText);
+
+      // Back button
+      const backBtn = document.createElement('button');
+      backBtn.className = 'btn btn-outline';
+      backBtn.onclick = () => App.showPage('home');
+
+      const backIcon = document.createElement('i');
+      backIcon.className = 'fas fa-arrow-left';
+      const backText = document.createTextNode(' Back to search');
+
+      backBtn.appendChild(backIcon);
+      backBtn.appendChild(backText);
+
+      productActions.appendChild(addToCartBtn);
+      productActions.appendChild(backBtn);
+
+      actionsDiv.appendChild(quantitySelector);
+      actionsDiv.appendChild(productActions);
+
+      // Assemble info section
+      infoSection.appendChild(productName);
+      infoSection.appendChild(productCategory);
+      infoSection.appendChild(productPrice);
+      infoSection.appendChild(descriptionDiv);
+      infoSection.appendChild(actionsDiv);
+
+      // Assemble layout
+      layout.appendChild(imageSection);
+      layout.appendChild(infoSection);
+
+      container.appendChild(layout);
 
       console.log('Product detail content populated');
       
