@@ -37,10 +37,17 @@ const authenticateToken = (req, res, next) => {
 // Authentication Routes
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone, address } = req.body;
+    const { email, password, firstName, lastName, homeAddress } = req.body;
+
+    console.log('Registration request:', { email, firstName, lastName, homeAddress });
 
     if (!db.pool) {
       return res.status(500).json({ message: 'Database not available' });
+    }
+
+    // Validate input
+    if (!firstName || !lastName || !homeAddress || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
     // Check if user already exists
@@ -52,14 +59,16 @@ app.post('/api/auth/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
+    // Create new user with home_address field
     const result = await db.query(
-      `INSERT INTO users (email, password, first_name, last_name, phone, address_line1, address_line2, city, postcode, county) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, email, first_name, last_name, phone, address_line1, address_line2, city, postcode, county`,
-      [email, hashedPassword, firstName, lastName, phone, address?.line1 || '', address?.line2 || '', address?.city || '', address?.postcode || '', address?.county || '']
+      `INSERT INTO users (email, password, first_name, last_name, home_address) 
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, home_address`,
+      [email, hashedPassword, firstName, lastName, homeAddress]
     );
 
     const newUser = result.rows[0];
+
+    console.log('User created successfully:', newUser);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -76,14 +85,7 @@ app.post('/api/auth/register', async (req, res) => {
         email: newUser.email,
         firstName: newUser.first_name,
         lastName: newUser.last_name,
-        phone: newUser.phone,
-        address: {
-          line1: newUser.address_line1,
-          line2: newUser.address_line2,
-          city: newUser.city,
-          postcode: newUser.postcode,
-          county: newUser.county
-        }
+        homeAddress: newUser.home_address
       }
     });
   } catch (error) {
@@ -130,13 +132,7 @@ app.post('/api/auth/login', async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         phone: user.phone,
-        address: {
-          line1: user.address_line1,
-          line2: user.address_line2,
-          city: user.city,
-          postcode: user.postcode,
-          county: user.county
-        }
+        homeAddress: user.home_address
       }
     });
   } catch (error) {
