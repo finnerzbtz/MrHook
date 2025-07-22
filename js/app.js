@@ -139,9 +139,14 @@ const App = {
       const header = document.getElementById('mainHeader');
       const currentScrollY = window.scrollY;
 
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      // Always show header when at the top of the page
+      if (currentScrollY <= 10) {
+        header.style.transform = 'translateY(0)';
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Hide when scrolling down and past 100px
         header.style.transform = 'translateY(-100%)';
-      } else {
+      } else if (currentScrollY < lastScrollY) {
+        // Show when scrolling up
         header.style.transform = 'translateY(0)';
       }
 
