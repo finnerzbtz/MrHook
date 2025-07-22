@@ -127,7 +127,7 @@ const ProductsComponent = {
   },
 
   // Add product to cart
-  addToCart(productId) {
+  async addToCart(productId) {
     if (!Auth.isLoggedIn()) {
       Toast.show('Please login to add items to your basket', 'error');
       App.showPage('login');
@@ -137,13 +137,22 @@ const ProductsComponent = {
     const quantityInput = document.getElementById('productQuantity');
     const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
 
-    Cart.add(productId, quantity);
+    try {
+      // Add to backend cart via API
+      await API.addToCart(productId, quantity);
+      
+      // Also add to local cart for immediate UI updates
+      Cart.add(productId, quantity);
 
-    const product = products.find(p => p.id === productId);
-    Toast.show(`${product.name} added to basket!`);
+      const product = products.find(p => p.id === productId);
+      Toast.show(`${product.name} added to basket!`);
 
-    // Go back to search after adding to cart
-    this.backToSearch();
+      // Go back to search after adding to cart
+      this.backToSearch();
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      Toast.show('Failed to add item to basket. Please try again.', 'error');
+    }
   },
 
   // Apply filters
@@ -596,7 +605,7 @@ const ProfileComponent = {
 // Basket Component
 const BasketComponent = {
   // Render basket contents
-  render() {
+  async render() {
     if (!Auth.isLoggedIn()) {
       App.showPage('login');
       return;
@@ -604,7 +613,26 @@ const BasketComponent = {
 
     const basketContent = document.getElementById('basketContent');
     const basketSummary = document.getElementById('basketSummary');
-    const cart = Cart.get();
+    
+    // Load cart from API to ensure sync with backend
+    let cart = [];
+    try {
+      cart = await API.getCart();
+      // Sync local cart with backend
+      const localCart = cart.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      }));
+      Storage.set('cart', localCart);
+      Cart.updateCartUI();
+    } catch (error) {
+      console.error('Failed to load cart:', error);
+      // Fallback to local cart
+      cart = Cart.get().map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return { ...item, product };
+      });
+    }
 
     if (cart.length === 0) {
       basketContent.innerHTML = `
@@ -623,7 +651,7 @@ const BasketComponent = {
 
     // Render basket items
     basketContent.innerHTML = cart.map(item => {
-      const product = products.find(p => p.id === item.productId);
+      const product = item.product || products.find(p => p.id === item.productId);
       if (!product) return '';
 
       const subtotal = product.price * item.quantity;
@@ -655,7 +683,10 @@ const BasketComponent = {
     }).join('');
 
     // Render basket summary
-    const total = Cart.getTotal();
+    const total = cart.reduce((sum, item) => {
+      const product = item.product || products.find(p => p.id === item.productId);
+      return sum + (product ? product.price * item.quantity : 0);
+    }, 0);
     basketSummary.innerHTML = `
       <div class="summary-row">
         <span>Subtotal:</span>
@@ -677,17 +708,37 @@ const BasketComponent = {
   },
 
   // Update item quantity
-  updateQuantity(productId, newQuantity) {
-    Cart.updateQuantity(productId, newQuantity);
-    this.render();
+  async updateQuantity(productId, newQuantity) {
+    try {
+      if (newQuantity <= 0) {
+        await API.removeFromCart(productId);
+      } else {
+        await API.updateCart(productId, newQuantity);
+      }
+      
+      // Update local cart as well
+      Cart.updateQuantity(productId, newQuantity);
+      
+      this.render();
+    } catch (error) {
+      console.error('Failed to update cart:', error);
+      Toast.show('Failed to update cart. Please try again.', 'error');
+    }
   },
 
   // Remove item from basket
-  removeItem(productId) {
-    const product = products.find(p => p.id === productId);
-    Cart.remove(productId);
-    Toast.show(`${product.name} removed from basket`);
-    this.render();
+  async removeItem(productId) {
+    try {
+      await API.removeFromCart(productId);
+      
+      const product = products.find(p => p.id === productId);
+      Cart.remove(productId);
+      Toast.show(`${product.name} removed from basket`);
+      this.render();
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      Toast.show('Failed to remove item. Please try again.', 'error');
+    }
   },
 
   // Place order

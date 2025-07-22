@@ -66,7 +66,7 @@ const Cart = {
   },
 
   // Add item to cart
-  add(productId, quantity = 1) {
+  async add(productId, quantity = 1) {
     const cart = this.get();
     const existingItem = cart.find(item => item.productId === productId);
 
@@ -78,6 +78,16 @@ const Cart = {
 
     Storage.set('cart', cart);
     this.updateCartUI();
+
+    // If user is logged in, also sync with backend
+    if (Auth.isLoggedIn()) {
+      try {
+        await API.addToCart(productId, quantity);
+      } catch (error) {
+        console.error('Failed to sync cart with backend:', error);
+      }
+    }
+
     return cart;
   },
 
