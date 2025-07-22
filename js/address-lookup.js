@@ -220,3 +220,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+// Address lookup utility for UK addresses
+class AddressLookup {
+  static async lookupAddress(postcode) {
+    // Simple mock implementation - in production, you'd use a real API
+    return {
+      suggestions: [
+        {
+          line1: "123 Main Street",
+          line2: "",
+          city: "London",
+          county: "Greater London",
+          postcode: postcode.toUpperCase()
+        }
+      ]
+    };
+  }
+
+  static validatePostcode(postcode) {
+    // Basic UK postcode validation
+    const postcodeRegex = /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i;
+    return postcodeRegex.test(postcode.trim());
+  }
+}
+
+// Make it globally available
+window.AddressLookup = AddressLookup;

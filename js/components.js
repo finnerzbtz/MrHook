@@ -256,15 +256,30 @@ const AuthComponent = {
       return;
     }
 
-    const userData = { firstName, lastName, email, address, password };
-    const user = Auth.register(userData);
-
-    if (user) {
-      Toast.show(`Account created successfully! Welcome, ${user.firstName}!`);
+    try {
+      const userData = { 
+        firstName, 
+        lastName, 
+        email, 
+        phone: address.phone || '', 
+        address: {
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          postcode: address.postcode,
+          county: address.county
+        }, 
+        password 
+      };
+      
+      const response = await API.register(userData);
+      
+      Toast.show(`Account created successfully! Welcome, ${response.user.firstName}!`);
       App.updateAuthUI();
       App.showPage('home');
-    } else {
-      Toast.show('Error creating account. Please try again.', 'error');
+    } catch (error) {
+      console.error('Registration error:', error);
+      Toast.show(error.message || 'Error creating account. Please try again.', 'error');
     }
   },
 
