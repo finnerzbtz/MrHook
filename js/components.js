@@ -119,6 +119,13 @@ const ProductsComponent = {
       const modal = document.getElementById('productModal');
       const detail = document.getElementById('productDetail');
 
+      // Check if modal elements exist
+      if (!modal || !detail) {
+        console.error('Product modal elements not found');
+        Toast.show('Product details cannot be displayed', 'error');
+        return;
+      }
+
       detail.innerHTML = `
         <img src="${product.image}" alt="${escapeHtml(product.name)}" class="product-detail-image">
         <div class="product-detail-info">
