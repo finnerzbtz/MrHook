@@ -1120,6 +1120,15 @@
   background: var(--white);
 }
 
+/* Mobile fix for centering */
+@media (max-width: 768px) {
+  .product-detail-page.active {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 
 
 /* Product detail header removed - content moved up */
