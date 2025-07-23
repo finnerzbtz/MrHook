@@ -184,15 +184,18 @@ const App = {
       
       const currentScrollY = window.scrollY;
 
-      // Always show header when at the top of the page
-      if (currentScrollY <= 10) {
+      // Always show header when at the top of the page (increased threshold)
+      if (currentScrollY <= 50) {
         header.style.transform = 'translateY(0)';
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Hide when scrolling down and past 100px
+        header.style.transition = 'transform 0.3s ease';
+      } else if (currentScrollY > lastScrollY && currentScrollY > 150) {
+        // Hide when scrolling down and past 150px
         header.style.transform = 'translateY(-100%)';
+        header.style.transition = 'transform 0.3s ease';
       } else if (currentScrollY < lastScrollY) {
         // Show when scrolling up
         header.style.transform = 'translateY(0)';
+        header.style.transition = 'transform 0.3s ease';
       }
 
       lastScrollY = currentScrollY;
@@ -241,7 +244,12 @@ const App = {
             break;
           case 'productDetail':
             // Product detail content is already populated
-            // Page shows with header visible - no overlay needed
+            // Ensure header is visible when showing product detail
+            const header = document.getElementById('mainHeader');
+            if (header) {
+              header.style.transform = 'translateY(0)';
+              header.style.transition = 'transform 0.3s ease';
+            }
             break;
           case 'resetPassword':
             // Reset password page rendered from HTML
