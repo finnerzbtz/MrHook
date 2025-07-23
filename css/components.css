@@ -1117,15 +1117,15 @@
   display: block;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
   background: var(--white);
 }
 
-/* Mobile fix for centering */
 @media (max-width: 768px) {
   .product-detail-page.active {
     width: 100%;
-    margin-left: 0;
-    margin-right: 0;
+    margin-left: calc(-1 * var(--space-4));
+    margin-right: calc(-1 * var(--space-4));
   }
 }
 
